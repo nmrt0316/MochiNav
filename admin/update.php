@@ -1,15 +1,10 @@
 <?php ob_start();
 /* ==========================================================================
    糯米の引导页 · 在线升级管理页 admin/update.php
-   独立页面，不嵌入后台 12 个标签栏。
-   只调用 index.php 的 5 个 API action（update_check / update_download /
-   update_apply / update_rollback / update_status），不直接请求 GitHub。
    ========================================================================== */
 
-/* 默认值唯一权威来源（前后台共用） */
 require_once __DIR__ . '/defaults.php';
 
-/* 登录检查 */
 if (session_status() === PHP_SESSION_NONE) {
     session_name('NUOMI_ADMIN');
     session_start();
@@ -41,275 +36,53 @@ $releasesPage = 'https://github.com/' . UPDATE_GITHUB_REPO . '/releases';
 })();
 </script>
 <style>
-/* ==========================================================================
-   在线升级页内联样式（不依赖 admin.css 新增章节；admin.css 加载时作为补充）
-   ========================================================================== */
-body.update-page {
-    padding: 0;
-    min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    background-attachment: fixed;
-}
-html[data-theme="dark"] body.update-page {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-}
-
-.update-container {
-    max-width: 760px;
-    margin: 0 auto;
-    padding: 24px 16px 60px;
-}
-
-.update-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 8px 4px 16px;
-    flex-wrap: wrap;
-}
-.update-header-left {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-.update-header-left h1 {
-    color: #fff;
-    font-size: 18px;
-    font-weight: 600;
-    margin: 0;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
+/* 样式保持与你原来完全一致，无需改动 */
+body.update-page { padding: 0; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-attachment: fixed; }
+html[data-theme="dark"] body.update-page { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
+.update-container { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+.update-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 4px 16px; flex-wrap: wrap; }
+.update-header-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.update-header-left h1 { color: #fff; font-size: 18px; font-weight: 600; margin: 0; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px; }
 html[data-theme="dark"] .update-header-left h1 { color: #e8eaf6; }
-
-.update-card {
-    background: var(--bg-card, #ffffff);
-    border-radius: 14px;
-    padding: 16px 18px;
-    margin-bottom: 12px;
-    box-shadow: 0 2px 8px var(--shadow-card, rgba(0,0,0,0.06));
-    color: var(--text-main, #2c3e50);
-}
-.update-card-title {
-    font-size: 15px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: var(--text-main, #2c3e50);
-}
-
-/* 版本卡 */
+.update-card { background: var(--bg-card, #ffffff); border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; box-shadow: 0 2px 8px var(--shadow-card, rgba(0,0,0,0.06)); color: var(--text-main, #2c3e50); }
+.update-card-title { font-size: 15px; font-weight: 600; margin-bottom: 10px; color: var(--text-main, #2c3e50); }
 .update-version-card { text-align: center; }
-.update-version-row {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
-    padding: 8px 0 12px;
-    flex-wrap: wrap;
-}
-.update-version-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-}
-.update-version-label {
-    font-size: 12px;
-    color: var(--text-muted, #909399);
-    letter-spacing: 0.3px;
-}
-.update-version-value {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--text-main, #2c3e50);
-    font-family: Consolas, Menlo, monospace;
-}
-.update-version-arrow {
-    font-size: 20px;
-    color: var(--text-muted, #909399);
-    opacity: 0.5;
-}
-.update-status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12.5px;
-    background: var(--bg-chip, #f0f2f7);
-    color: var(--text-muted, #909399);
-}
-.update-status-badge.is-new {
-    background: rgba(245, 158, 11, 0.15);
-    color: #d97706;
-    font-weight: 600;
-}
-.update-status-badge.is-ok {
-    background: rgba(16, 185, 129, 0.14);
-    color: #059669;
-    font-weight: 600;
-}
-html[data-theme="dark"] .update-status-badge.is-new {
-    background: rgba(245, 158, 11, 0.22);
-    color: #fbbf24;
-}
-html[data-theme="dark"] .update-status-badge.is-ok {
-    background: rgba(16, 185, 129, 0.22);
-    color: #34d399;
-}
-
-/* 环境检测 */
-.update-env-row {
-    padding: 10px 12px;
-    border-radius: 10px;
-    margin-bottom: 8px;
-    font-size: 13px;
-    line-height: 1.6;
-}
-.update-env-row.is-ok {
-    background: rgba(16, 185, 129, 0.10);
-    color: #059669;
-    border: 1px solid rgba(16, 185, 129, 0.30);
-}
-.update-env-row.is-err {
-    background: rgba(239, 68, 68, 0.10);
-    color: #dc2626;
-    border: 1px solid rgba(239, 68, 68, 0.30);
-}
-html[data-theme="dark"] .update-env-row.is-ok {
-    background: rgba(16, 185, 129, 0.18);
-    color: #34d399;
-}
-html[data-theme="dark"] .update-env-row.is-err {
-    background: rgba(239, 68, 68, 0.18);
-    color: #f87171;
-}
-.update-env-meta {
-    font-size: 12.5px;
-    color: var(--text-code, #606266);
-    margin-top: 4px;
-    line-height: 1.6;
-    word-break: break-all;
-}
-.update-env-meta code {
-    font-family: Consolas, Menlo, monospace;
-    background: var(--bg-chip, #f0f2f7);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 12px;
-}
+.update-version-row { display: flex; align-items: center; justify-content: center; gap: 24px; padding: 8px 0 12px; flex-wrap: wrap; }
+.update-version-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.update-version-label { font-size: 12px; color: var(--text-muted, #909399); letter-spacing: 0.3px; }
+.update-version-value { font-size: 20px; font-weight: 700; color: var(--text-main, #2c3e50); font-family: Consolas, Menlo, monospace; }
+.update-version-arrow { font-size: 20px; color: var(--text-muted, #909399); opacity: 0.5; }
+.update-status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12.5px; background: var(--bg-chip, #f0f2f7); color: var(--text-muted, #909399); }
+.update-status-badge.is-new { background: rgba(245, 158, 11, 0.15); color: #d97706; font-weight: 600; }
+.update-status-badge.is-ok { background: rgba(16, 185, 129, 0.14); color: #059669; font-weight: 600; }
+html[data-theme="dark"] .update-status-badge.is-new { background: rgba(245, 158, 11, 0.22); color: #fbbf24; }
+html[data-theme="dark"] .update-status-badge.is-ok { background: rgba(16, 185, 129, 0.22); color: #34d399; }
+.update-env-row { padding: 10px 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; line-height: 1.6; }
+.update-env-row.is-ok { background: rgba(16, 185, 129, 0.10); color: #059669; border: 1px solid rgba(16, 185, 129, 0.30); }
+.update-env-row.is-err { background: rgba(239, 68, 68, 0.10); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.30); }
+html[data-theme="dark"] .update-env-row.is-ok { background: rgba(16, 185, 129, 0.18); color: #34d399; }
+html[data-theme="dark"] .update-env-row.is-err { background: rgba(239, 68, 68, 0.18); color: #f87171; }
+.update-env-meta { font-size: 12.5px; color: var(--text-code, #606266); margin-top: 4px; line-height: 1.6; word-break: break-all; }
+.update-env-meta code { font-family: Consolas, Menlo, monospace; background: var(--bg-chip, #f0f2f7); padding: 1px 6px; border-radius: 4px; font-size: 12px; }
 .update-env-meta.is-err { color: #dc2626; }
 html[data-theme="dark"] .update-env-meta.is-err { color: #f87171; }
-
-/* 更新信息 */
-.update-release-line {
-    font-size: 13.5px;
-    margin-bottom: 4px;
-    color: var(--text-code, #606266);
-}
-.update-release-line b {
-    color: var(--text-main, #2c3e50);
-    font-family: Consolas, Menlo, monospace;
-}
-.update-release-body {
-    white-space: pre-wrap;
-    word-break: break-word;
-    max-height: 260px;
-    overflow-y: auto;
-    background: var(--bg-chip, #f0f2f7);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: 13px;
-    line-height: 1.7;
-    color: var(--text-code, #606266);
-    margin: 10px 0;
-    font-family: inherit;
-}
-html[data-theme="dark"] .update-release-body {
-    background: #33384e;
-    color: #c5c9e2;
-}
-.update-release-actions {
-    display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
-/* 操作区 */
-.update-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    align-items: stretch;
-}
-.update-actions .btn {
-    padding: 10px 20px;
-    font-size: 14px;
-    font-weight: 500;
-    justify-content: center;
-}
-.update-action-tip {
-    font-size: 12.5px;
-    color: var(--text-muted, #909399);
-    line-height: 1.6;
-    margin-top: 4px;
-}
-.update-action-empty {
-    padding: 12px;
-    text-align: center;
-    color: var(--text-muted, #909399);
-    font-size: 14px;
-}
-
-/* 进度条 */
+.update-release-line { font-size: 13.5px; margin-bottom: 4px; color: var(--text-code, #606266); }
+.update-release-line b { color: var(--text-main, #2c3e50); font-family: Consolas, Menlo, monospace; }
+.update-release-body { white-space: pre-wrap; word-break: break-word; max-height: 260px; overflow-y: auto; background: var(--bg-chip, #f0f2f7); border-radius: 8px; padding: 10px 12px; font-size: 13px; line-height: 1.7; color: var(--text-code, #606266); margin: 10px 0; font-family: inherit; }
+html[data-theme="dark"] .update-release-body { background: #33384e; color: #c5c9e2; }
+.update-release-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.update-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
+.update-actions .btn { padding: 10px 20px; font-size: 14px; font-weight: 500; justify-content: center; }
+.update-action-tip { font-size: 12.5px; color: var(--text-muted, #909399); line-height: 1.6; margin-top: 4px; }
+.update-action-empty { padding: 12px; text-align: center; color: var(--text-muted, #909399); font-size: 14px; }
 .update-progress { margin-top: 14px; }
-.update-progress-bar {
-    width: 100%;
-    height: 6px;
-    background: var(--bg-chip, #f0f2f7);
-    border-radius: 3px;
-    overflow: hidden;
-    margin-bottom: 8px;
-}
-.update-progress-fill {
-    width: 0%;
-    height: 100%;
-    background: linear-gradient(90deg, #667eea, #764ba2);
-    border-radius: 3px;
-    transition: width 0.3s ease;
-    animation: updatePulse 1.8s ease-in-out infinite;
-}
-@keyframes updatePulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.65; }
-}
-.update-progress-text {
-    font-size: 12.5px;
-    color: var(--text-muted, #909399);
-    text-align: center;
-}
-
-/* 状态卡 */
-.update-state-line {
-    display: flex;
-    gap: 12px;
-    padding: 4px 0;
-    font-size: 13px;
-    align-items: flex-start;
-}
-.update-state-label {
-    color: var(--text-muted, #909399);
-    flex-shrink: 0;
-    min-width: 40px;
-}
-.update-state-value {
-    color: var(--text-main, #2c3e50);
-    word-break: break-all;
-    line-height: 1.6;
-    flex: 1;
-}
+.update-progress-bar { width: 100%; height: 6px; background: var(--bg-chip, #f0f2f7); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
+.update-progress-fill { width: 0%; height: 100%; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 3px; transition: width 0.3s ease; animation: updatePulse 1.8s ease-in-out infinite; }
+@keyframes updatePulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.65; } }
+.update-progress-text { font-size: 12.5px; color: var(--text-muted, #909399); text-align: center; }
+.update-state-line { display: flex; gap: 12px; padding: 4px 0; font-size: 13px; align-items: flex-start; }
+.update-state-label { color: var(--text-muted, #909399); flex-shrink: 0; min-width: 40px; }
+.update-state-value { color: var(--text-main, #2c3e50); word-break: break-all; line-height: 1.6; flex: 1; }
 .update-state-value.is-ok { color: #059669; font-weight: 600; }
 .update-state-value.is-err { color: #dc2626; font-weight: 600; }
 .update-state-value.is-warn { color: #d97706; font-weight: 600; }
@@ -318,56 +91,14 @@ html[data-theme="dark"] .update-state-value.is-ok { color: #34d399; }
 html[data-theme="dark"] .update-state-value.is-err { color: #f87171; }
 html[data-theme="dark"] .update-state-value.is-warn { color: #fbbf24; }
 html[data-theme="dark"] .update-state-value.is-loading { color: #79bbff; }
-
-/* 风险提示 */
-.update-warning {
-    margin-top: 20px;
-    padding: 12px 14px;
-    background: rgba(245, 158, 11, 0.08);
-    border: 1px solid rgba(245, 158, 11, 0.30);
-    border-radius: 12px;
-    font-size: 12.5px;
-    line-height: 1.7;
-    color: #92400e;
-}
-html[data-theme="dark"] .update-warning {
-    background: rgba(245, 158, 11, 0.12);
-    border-color: rgba(245, 158, 11, 0.35);
-    color: #fbbf24;
-}
-.update-warning code {
-    background: rgba(0, 0, 0, 0.06);
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-family: Consolas, Menlo, monospace;
-    font-size: 11.5px;
-    word-break: break-all;
-}
-html[data-theme="dark"] .update-warning code {
-    background: rgba(0, 0, 0, 0.25);
-}
-
-/* 返回按钮配色（渐变背景上可读） */
-.update-header .btn-back {
-    background: rgba(255, 255, 255, 0.18);
-    color: #ffffff;
-    border: 1px solid rgba(255, 255, 255, 0.28);
-    box-shadow: none;
-    padding: 8px 14px;
-    border-radius: 8px;
-}
-.update-header .btn-back:hover {
-    background: rgba(255, 255, 255, 0.28);
-    box-shadow: none;
-}
-html[data-theme="dark"] .update-header .btn-back {
-    background: rgba(255, 255, 255, 0.08);
-    border-color: rgba(255, 255, 255, 0.15);
-    color: #e8eaf6;
-}
-html[data-theme="dark"] .update-header .btn-back:hover {
-    background: rgba(255, 255, 255, 0.14);
-}
+.update-warning { margin-top: 20px; padding: 12px 14px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.30); border-radius: 12px; font-size: 12.5px; line-height: 1.7; color: #92400e; }
+html[data-theme="dark"] .update-warning { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.35); color: #fbbf24; }
+.update-warning code { background: rgba(0, 0, 0, 0.06); padding: 1px 6px; border-radius: 4px; font-family: Consolas, Menlo, monospace; font-size: 11.5px; word-break: break-all; }
+html[data-theme="dark"] .update-warning code { background: rgba(0, 0, 0, 0.25); }
+.update-header .btn-back { background: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: none; padding: 8px 14px; border-radius: 8px; }
+.update-header .btn-back:hover { background: rgba(255, 255, 255, 0.28); box-shadow: none; }
+html[data-theme="dark"] .update-header .btn-back { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: #e8eaf6; }
+html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 255, 255, 0.14); }
 </style>
 </head>
 <body class="update-page">
@@ -493,9 +224,7 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         return data;
     }
 
-    /* ======================================================================
-       主题切换
-       ====================================================================== */
+    /* 主题切换 */
     (function () {
         var btn = document.getElementById('themeToggleBtn');
         if (!btn) return;
@@ -526,9 +255,6 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         });
     })();
 
-    /* ======================================================================
-       状态
-       ====================================================================== */
     var state = {
         hasUpdate: false,
         latestVersion: '',
@@ -542,9 +268,6 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         pollingTimer: null
     };
 
-    /* ======================================================================
-       视图渲染
-       ====================================================================== */
     function showProgress(text) {
         var area = document.getElementById('progressArea');
         var fill = document.getElementById('progressFill');
@@ -625,6 +348,9 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         if (viewLink) viewLink.href = state.releaseUrl || releasesPage;
     }
 
+    /* ======================================================================
+       重构操作区渲染逻辑：让状态不再互相锁死
+       ====================================================================== */
     function renderActions() {
         var box = document.getElementById('actionButtons');
         if (!box) return;
@@ -632,14 +358,14 @@ html[data-theme="dark"] .update-header .btn-back:hover {
 
         var st = state.statusValue || 'idle';
 
-        /* 下载中 / 应用中：只显示进度条 */
+        /* 1. 进度中 */
         if (st === 'downloading' || st === 'applying') {
             showProgress(st === 'downloading' ? '正在下载更新包…' : '正在应用升级…');
             return;
         }
         hideProgress();
 
-        /* 已成功 */
+        /* 2. 升级成功 (success) */
         if (st === 'success') {
             var refreshBtn = document.createElement('button');
             refreshBtn.className = 'btn btn-primary';
@@ -662,35 +388,7 @@ html[data-theme="dark"] .update-header .btn-back:hover {
             return;
         }
 
-        /* 失败 / 已回滚 */
-        if (st === 'failed' || st === 'rolled_back') {
-            var retryBtn = document.createElement('button');
-            retryBtn.className = 'btn btn-primary';
-            retryBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>重新检查更新';
-            retryBtn.onclick = function () { doCheckUpdate(); };
-            box.appendChild(retryBtn);
-
-            if (state.hasUpdate && state.env && state.env.writable) {
-                var reUpgradeBtn = document.createElement('button');
-                reUpgradeBtn.className = 'btn btn-primary';
-                reUpgradeBtn.style.marginTop = '8px';
-                reUpgradeBtn.textContent = '⬆ 再次尝试升级到 v' + state.latestVersion;
-                reUpgradeBtn.onclick = doUpgrade;
-                box.appendChild(reUpgradeBtn);
-            }
-
-            if (state.canRollback) {
-                var rbBtn2 = document.createElement('button');
-                rbBtn2.className = 'btn';
-                rbBtn2.style.cssText = 'background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);margin-top:8px;';
-                rbBtn2.textContent = '↩ 回滚到上一版本';
-                rbBtn2.onclick = doRollback;
-                box.appendChild(rbBtn2);
-            }
-            return;
-        }
-
-        /* 已下载 */
+        /* 3. 已下载等待应用 (downloaded) */
         if (st === 'downloaded') {
             var applyBtn = document.createElement('button');
             applyBtn.className = 'btn btn-primary';
@@ -705,18 +403,28 @@ html[data-theme="dark"] .update-header .btn-back:hover {
             return;
         }
 
-        /* idle + 有更新 + 环境 OK */
+        /* ====================================================
+           4. 其他状态（idle / failed / rolled_back 统一处理）
+           只要有更新且环境支持，第一优先级永远是直接给“立即升级”
+           ==================================================== */
         if (state.hasUpdate && state.env && state.env.writable) {
             var upBtn = document.createElement('button');
             upBtn.className = 'btn btn-primary';
-            upBtn.textContent = '⬆ 立即升级到 v' + state.latestVersion;
+            upBtn.innerHTML = '⬆ 立即升级到 v' + state.latestVersion;
             upBtn.onclick = doUpgrade;
             box.appendChild(upBtn);
-            return;
-        }
 
-        /* idle + 有更新 + 环境不 OK */
-        if (state.hasUpdate && state.env && !state.env.writable) {
+            var tipUp = document.createElement('div');
+            tipUp.className = 'update-action-tip';
+            tipUp.textContent = '点击按钮将自动下载并覆盖代码（不会动 data.json / photos 等数据）。';
+            
+            // 如果处于失败或回滚状态，给出提示说明
+            if (st === 'failed' || st === 'rolled_back') {
+                tipUp.innerHTML = '上次操作状态：<b class="' + (st === 'failed' ? 'text-danger' : 'text-warning') + '">' + (st === 'failed' ? '失败' : '已回滚') + '</b>。你可以再次尝试升级。';
+            }
+            box.appendChild(tipUp);
+        } 
+        else if (state.hasUpdate && state.env && !state.env.writable) {
             var ghBtn = document.createElement('a');
             ghBtn.className = 'btn btn-primary';
             ghBtn.href = state.releaseUrl || releasesPage;
@@ -725,41 +433,54 @@ html[data-theme="dark"] .update-header .btn-back:hover {
             ghBtn.textContent = '🔗 去 GitHub 下载';
             box.appendChild(ghBtn);
 
-            var tip = document.createElement('div');
-            tip.className = 'update-action-tip';
-            tip.textContent = '当前主机环境不支持在线升级，请下载最新压缩包后按 README 说明手动覆盖（务必保留 admin/data.json、admin/.admin.conf、photos/ 等私有数据）。';
-            box.appendChild(tip);
-            return;
-        }
-
-        /* idle + 无更新 + 已知最新版本 */
-        if (!state.hasUpdate && state.latestVersion) {
+            var tipNoEnv = document.createElement('div');
+            tipNoEnv.className = 'update-action-tip';
+            tipNoEnv.textContent = '当前主机环境不支持在线升级，请下载最新压缩包后按 README 说明手动覆盖。';
+            box.appendChild(tipNoEnv);
+        } 
+        else if (!state.hasUpdate && state.latestVersion) {
             var p = document.createElement('div');
             p.className = 'update-action-empty';
             p.textContent = '✅ 已是最新版本 v' + state.latestVersion + '，无需升级。';
             box.appendChild(p);
-
-            if (state.canRollback) {
-                var rbBtn3 = document.createElement('button');
-                rbBtn3.className = 'btn';
-                rbBtn3.style.cssText = 'margin-top:8px;background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);';
-                rbBtn3.textContent = '↩ 回滚到上一版本';
-                rbBtn3.onclick = doRollback;
-                box.appendChild(rbBtn3);
-            }
-            return;
+        } 
+        else {
+            var loading = document.createElement('div');
+            loading.className = 'update-action-empty';
+            loading.textContent = '正在检查更新…';
+            box.appendChild(loading);
         }
 
-        /* 正在检查 */
-        var loading = document.createElement('div');
-        loading.className = 'update-action-empty';
-        loading.textContent = '正在检查更新…';
-        box.appendChild(loading);
+        /* ====================================================
+           5. 底部附带工具按钮（重新检查 / 强制回滚）
+           无论主操作是什么，都可以重新检查或回滚
+           ==================================================== */
+        var extraActions = document.createElement('div');
+        extraActions.style.cssText = 'display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center;';
+        
+        var chkBtn = document.createElement('button');
+        chkBtn.className = 'btn';
+        chkBtn.style.cssText = 'flex:1; min-width:120px;';
+        chkBtn.innerHTML = '🔄 重新检查更新';
+        chkBtn.onclick = function () { 
+            state.statusValue = 'idle'; // 强制重置本地状态，防止点击后卡住
+            doCheckUpdate(); 
+        };
+        extraActions.appendChild(chkBtn);
+
+        if (state.canRollback) {
+            var rbBtn2 = document.createElement('button');
+            rbBtn2.className = 'btn';
+            rbBtn2.style.cssText = 'flex:1; min-width:120px; background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);';
+            rbBtn2.textContent = '↩ 回滚到上一版本';
+            rbBtn2.onclick = doRollback;
+            extraActions.appendChild(rbBtn2);
+        }
+        
+        box.appendChild(extraActions);
     }
 
-    /* ======================================================================
-       动作
-       ====================================================================== */
+    /* 动作 */
     async function doCheckUpdate() {
         var vsEl = document.getElementById('versionStatus');
         if (vsEl) {
@@ -915,9 +636,7 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         }, 1500);
     }
 
-    /* ======================================================================
-       初始化
-       ====================================================================== */
+    /* 初始化 */
     (async function init() {
         try {
             var st = await api('update_status');
