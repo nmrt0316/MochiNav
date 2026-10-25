@@ -1,4 +1,4 @@
-# 糯米引导页 · 个人导航站
+# 糯米の引导页 · 个人导航站
 
 ![版本](https://img.shields.io/badge/version-1.1.0-blue)
 ![PHP](https://img.shields.io/badge/PHP-7.3%2B-777bb4)
@@ -491,10 +491,10 @@ photos/
 - **页脚 Powered by 链接**（`poweredByUrl`）：留空则 Powered by 只显示为纯文本
 
 **默认值**（可在 `admin/defaults.php` 里修改）：
-- `copyright`：`© 2026 糯米引导页`
-- `githubUrl`：`https://github.com/YOUR_USERNAME/YOUR_REPO`（占位符，请替换为真实仓库地址）
+- `copyright`：`© 2026 糯米の引导页`
+- `githubUrl`：`https://github.com/nmrt0316/MochiNav`（占位符，请替换为真实仓库地址）
 - `githubEnabled`：`1`（开启）
-- `poweredBy`：`糯米引导页`
+- `poweredBy`：`糯米の引导页`
 - `poweredByUrl`：同上占位符
 
 ### 🌐 统计代码
@@ -572,10 +572,10 @@ photos/
 | `localBannerPriority` | Banner 兜底优先级（`api` / `local`） | `api` |
 | `localBgUaId` | 背景抓取使用的 UA 模板 ID | `ua_mobile_default` |
 | `localBannerUaId` | Banner 抓取使用的 UA 模板 ID | `ua_desktop_default` |
-| **`copyright`** | **页脚版权信息** | **`© 2026 糯米引导页`** |
-| **`githubUrl`** | **页脚 GitHub 链接** | **`https://github.com/YOUR_USERNAME/YOUR_REPO`** |
+| **`copyright`** | **页脚版权信息** | **`© 2026 糯米の引导页`** |
+| **`githubUrl`** | **页脚 GitHub 链接** | **`https://github.com/nmrt0316`** |
 | **`githubEnabled`** | **GitHub 链接开关（`1` / `0`）** | **`1`** |
-| **`poweredBy`** | **页脚 Powered by 项目名** | **`糯米引导页`** |
+| **`poweredBy`** | **页脚 Powered by 项目名** | **`糯米の引导页`** |
 | **`poweredByUrl`** | **页脚 Powered by 链接** | **同上** |
 
 > **默认路径约定**：`favicon` / `adminAvatar` 默认值是**不带前导 `/` 的相对路径**（`photos/TX.jpg`），根目录和子目录部署都能正确解析。老版本数据里如果存的是 `/photos/TX.jpg` 也照常使用，不受影响。
@@ -1173,7 +1173,7 @@ echo $raw;
   "announcements": [
     {
       "id": "ann_xxx",
-      "title": "欢迎使用糯米引导页",
+      "title": "欢迎使用糯米の引导页",
       "content": "<p>这是站点公告，支持简单的 HTML。</p>",
       "type": "info",
       "pinned": true,
@@ -1466,4 +1466,4 @@ A：列表风格更接近主流公告页的阅读体验——时间在左上、�
 
 ---
 
-**糯米引导页** · 让导航页也充满仪式感 ✨
+**糯米の引导页** · 让导航页也充满仪式感 ✨
