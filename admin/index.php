@@ -5162,7 +5162,10 @@ if (empty($adminPreloaders)) {
             <label class="form-label">匹配标识 matchKey</label>
             <div class="field-row">
                 <input type="text" id="effectEditMatchKey" maxlength="60" placeholder="与脚本 EffectsRegistry.push 里的 name 保持一致">
-                <button type="button" class="btn btn-sm" id="effectReadMatchKeyBtn" title="从 JS 文件内容重新读取 matchKey">🔄 自动读取</button>
+                <button type="button" class="btn btn-sm" id="effectReadMatchKeyBtn" title="从 JS 文件内容重新读取 matchKey">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 2px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    自动读取
+                </button>
             </div>
             <p class="small muted" style="margin-top:4px;">后台只在首次识别新特效时自动提取；手动修改后的值会永久保留，刷新不会被覆盖。觉得当前值不对时点「自动读取」重新提取。</p>
         </div>
