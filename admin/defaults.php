@@ -15,6 +15,33 @@ if (!defined('NUOMI_VERSION')) {
     define('NUOMI_VERSION', '1.1.0');
 }
 
+/* ==========================================================================
+   在线升级配置
+   --------------------------------------------------------------------------
+   对接 GitHub Releases API：
+     https://api.github.com/repos/{UPDATE_GITHUB_REPO}/releases/latest
+   - UPDATE_GITHUB_REPO      GitHub 仓库 owner/repo 字符串
+   - UPDATE_DIR              在线升级工作目录（缓存 / 包 / 备份 / state）
+   - UPDATE_MAX_PACKAGE_MB   下载 zip 的大小上限（MB）
+   - UPDATE_MAX_EXTRACTED_MB 解压后文件总大小上限（MB，防 zip 炸弹）
+   - UPDATE_BACKUP_KEEP      本地保留最近几份代码备份
+   ========================================================================== */
+if (!defined('UPDATE_GITHUB_REPO')) {
+    define('UPDATE_GITHUB_REPO', 'nmrt0316/MochiNav');
+}
+if (!defined('UPDATE_DIR')) {
+    define('UPDATE_DIR', __DIR__ . '/.update');
+}
+if (!defined('UPDATE_MAX_PACKAGE_MB')) {
+    define('UPDATE_MAX_PACKAGE_MB', 200);
+}
+if (!defined('UPDATE_MAX_EXTRACTED_MB')) {
+    define('UPDATE_MAX_EXTRACTED_MB', 200);
+}
+if (!defined('UPDATE_BACKUP_KEEP')) {
+    define('UPDATE_BACKUP_KEEP', 3);
+}
+
 if (!defined('NUOMI_DEFAULTS_LOADED')) {
     define('NUOMI_DEFAULTS_LOADED', true);
 
