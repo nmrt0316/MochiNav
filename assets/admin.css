@@ -142,23 +142,35 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
    ========================================================================== */
 .admin-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px 16px; }
 .admin-header-left { display: flex; align-items: center; }
-.header-title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: .5px; }
+.header-title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: .5px; white-space: nowrap; }
 .admin-header-right { display: flex; gap: 8px; align-items: center; }
 
-/* 版本号徽章 */
+/* 版本号徽章（带更新入口） */
 .header-version {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 500;
-    color: rgba(255, 255, 255, 0.55);
-    margin-left: 8px;
-    padding: 1px 7px;
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.8);
+    margin-left: 10px;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 20px;
     font-family: Consolas, Menlo, monospace;
     letter-spacing: 0;
     vertical-align: middle;
-    user-select: none;
+    text-decoration: none;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+.header-version:hover, .header-version:active {
+    background: rgba(255, 255, 255, 0.28);
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.3);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    transform: translateY(-1px);
 }
 
 .admin-tabs {
@@ -1210,7 +1222,7 @@ html[data-theme="dark"] .init-summary-hint {
 /* ==========================================================================
    22. 拖拽手柄与长按排序 (Drag & Sort)
    ========================================================================== */
-.drag-handle-mini, .drag-handle { flex-shrink: 0; cursor: grab; color: #a0a4b0; font-size: 16px; letter-spacing: -3px; line-height: 1; padding: 10px 8px; border-radius: 8px; user-select: none; -webkit-user-select: none; touch-action: none; transition: color .15s, background-color .15s; }
+.drag-handle-mini, .drag-handle { flex-shrink: 0; cursor: grab; color: #a0a4b0; font-size: 14px; letter-spacing: -2px; line-height: 1; padding: 8px 6px; border-radius: 8px; user-select: none; -webkit-user-select: none; touch-action: none; transition: color .15s, background-color .15s; }
 .drag-handle-mini:hover, .drag-handle:hover { color: #667eea; background: var(--bg-chip); }
 .drag-handle-mini:active, .drag-handle:active { cursor: grabbing; }
 html[data-theme="dark"] .drag-handle-mini, html[data-theme="dark"] .drag-handle { color: #8890a8; }
@@ -1364,8 +1376,52 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
     .auth-sparkle:nth-child(1) { left: 48% !important; } .auth-sparkle:nth-child(2) { top: 24% !important; right: 24% !important; } .auth-sparkle:nth-child(3) { top: 78% !important; left: 4% !important; } .auth-cloud-2 { top: 10%; }
 }
 @media (max-width: 640px) {
-    .admin-app { padding: 14px 10px 40px; } .row-cat { display: none; } .header-title { font-size: 16px; }
-    .header-version { display: none; }
+    .admin-app { padding: 14px 10px 40px; } .row-cat { display: none; } 
+    
+    /* 恢复单行布局，隐藏不必要的元素，保持简洁 */
+    .admin-header {
+        padding: 8px 4px 12px;
+    }
+    .header-title { font-size: 16px; }
+    .header-version { 
+        margin-left: 6px; 
+        padding: 1px 6px;
+        font-size: 10.5px;
+    }
+    .admin-header-right {
+        gap: 4px;
+    }
+    .admin-header-right .btn {
+        padding: 6px 10px;
+        font-size: 12.5px;
+    }
+    .admin-header-right .theme-toggle-btn {
+        width: 32px;
+        height: 32px;
+        min-width: 32px;
+    }
+    .admin-header-right .btn-view-home {
+        display: none !important; /* 移动端隐藏，节省空间 */
+    }
+
+    /* 分类栏改为垂直排列 */
+    .cat-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 12px;
+        gap: 10px;
+    }
+    .cat-bar-label {
+        display: none;
+    }
+    .cat-chips {
+        width: 100%;
+    }
+    .cat-add {
+        width: 100%;
+        justify-content: flex-end;
+        margin-top: 4px;
+    }
 
     .admin-tabs {
         overflow-x: auto;
@@ -1421,15 +1477,7 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
 
 /* ==========================================================================
    27. 在线升级页样式 (Online Upgrade Page)
-   --------------------------------------------------------------------------
-   供 admin/update.php 独立页面使用，不嵌入后台标签栏。
-   update.php 自身已内联大部分样式，此章节仅作为兜底与语义化补充：
-   - 如果将来把 update.php 的内联样式改到外部，可直接复用本章节
-   - 现阶段的 update.php 会把本文件（admin.css）作为主样式引入，
-     因此以下选择器必须保留，避免 .update-page 相关类丢失
    ========================================================================== */
-
-/* 页面容器 */
 .update-page {
     padding: 0;
     min-height: 100vh;
@@ -1446,7 +1494,6 @@ html[data-theme="dark"] .update-page {
     padding: 24px 16px 60px;
 }
 
-/* 顶部 */
 .update-header {
     display: flex;
     align-items: center;
@@ -1491,7 +1538,6 @@ html[data-theme="dark"] .update-header .btn-back:hover {
     background: rgba(255, 255, 255, 0.14);
 }
 
-/* 卡片 */
 .update-card {
     background: var(--bg-card, #ffffff);
     border-radius: 14px;
@@ -1507,7 +1553,6 @@ html[data-theme="dark"] .update-header .btn-back:hover {
     color: var(--text-main, #2c3e50);
 }
 
-/* 版本卡 */
 .update-version-card { text-align: center; }
 .update-version-row {
     display: flex;
@@ -1566,7 +1611,6 @@ html[data-theme="dark"] .update-status-badge.is-ok {
     color: #34d399;
 }
 
-/* 环境检测 */
 .update-env-row {
     padding: 10px 12px;
     border-radius: 10px;
@@ -1609,7 +1653,6 @@ html[data-theme="dark"] .update-env-row.is-err {
 .update-env-meta.is-err { color: #dc2626; }
 html[data-theme="dark"] .update-env-meta.is-err { color: #f87171; }
 
-/* 更新信息 */
 .update-release-line {
     font-size: 13.5px;
     margin-bottom: 4px;
@@ -1643,7 +1686,6 @@ html[data-theme="dark"] .update-release-body {
     flex-wrap: wrap;
 }
 
-/* 操作区 */
 .update-actions {
     display: flex;
     flex-direction: column;
@@ -1669,7 +1711,6 @@ html[data-theme="dark"] .update-release-body {
     font-size: 14px;
 }
 
-/* 进度条 */
 .update-progress { margin-top: 14px; }
 .update-progress-bar {
     width: 100%;
@@ -1697,7 +1738,6 @@ html[data-theme="dark"] .update-release-body {
     text-align: center;
 }
 
-/* 状态卡 */
 .update-state-line {
     display: flex;
     gap: 12px;
@@ -1725,7 +1765,6 @@ html[data-theme="dark"] .update-state-value.is-err { color: #f87171; }
 html[data-theme="dark"] .update-state-value.is-warn { color: #fbbf24; }
 html[data-theme="dark"] .update-state-value.is-loading { color: #79bbff; }
 
-/* 风险提示 */
 .update-warning {
     margin-top: 20px;
     padding: 12px 14px;
