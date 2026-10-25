@@ -4035,14 +4035,18 @@ if (empty($adminPreloaders)) {
     <header class="admin-header">
         <div class="admin-header-left">
             <span class="header-title"><?= e($siteCfg['adminHeaderTitle']) ?></span>
-            <span class="header-version" title="糯米の引导页当前版本">v<?= NUOMI_VERSION ?></span>
+            <!-- 把版本号变成可点击的更新入口，保留原来的胶囊样式，并加入小图标提示 -->
+            <a class="header-version" href="update.php" title="点击检查在线更新">
+                v<?= NUOMI_VERSION ?> 
+                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px;opacity:0.8"><path d="M21 2v6h-6M3 12a9 9 0 1 0 2.6-6.4L21 8"/></svg>
+            </a>
         </div>
         <div class="admin-header-right">
             <button class="btn btn-ghost theme-toggle-btn" id="themeToggleBtn" title="切换主题" aria-label="切换主题">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/></svg>
             </button>
-            <a class="btn btn-ghost" href="update.php">🔄 检查更新</a>
-            <a class="btn btn-ghost" href="../">查看首页</a>
+            <!-- 增加 btn-view-home 类名，方便在手机端隐藏 -->
+            <a class="btn btn-ghost btn-view-home" href="../">查看首页</a>
             <button class="btn btn-ghost" id="logoutBtn">退出登录</button>
         </div>
     </header>
