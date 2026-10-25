@@ -1,6 +1,6 @@
 <?php
 /* ==========================================================================
-   糯米引导页 - 默认值唯一权威来源
+   糯米の引导页 - 默认值唯一权威来源
    
    前台 index.php / announcement.php 和后台 admin/index.php 都 require_once 本文件。
    首次安装时这些默认值写入 data.json；之后前台只读 data.json，
@@ -28,13 +28,13 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
                 'title'            => '糯米の引导页',
                 'subtitle'         => '又一个引导页',
                 'avatar'           => 'https://q1.qlogo.cn/g?b=qq&nk=1498583218&s=640',
-                'favicon'          => 'photos/TX.jpg',
+                'favicon'          => 'photos/QQ.jpg',
                 'bgApi'            => 'https://www.loliapi.com/acg/',
                 'bannerApi'        => 'https://www.loliapi.com/acg/pc/',
                 'bgInterval'       => '10',
                 'bannerInterval'   => '6',
                 'cacheLimit'       => '8',
-                'adminAvatar'      => 'photos/TX.jpg',
+                'adminAvatar'      => 'photos/QQ.jpg',
                 'adminTitle'       => '后台登录',
                 'adminSubtitle'    => '糯米の引导页管理',
                 'adminPageTitle'   => '糯米の引导页 · 后台管理',
@@ -49,11 +49,11 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
                 'localBgUaId'         => 'ua_mobile_default',
                 'localBannerUaId'     => 'ua_desktop_default',
                 /* 页脚配置 */
-                'copyright'           => '© ' . date('Y') . ' 糯米引导页',
-                'githubUrl'           => 'https://github.com/YOUR_USERNAME/YOUR_REPO',
+                'copyright'           => '© ' . date('Y') . ' 糯米の引导页',
+                'githubUrl'           => 'https://github.com/nmrt0316',
                 'githubEnabled'       => '1',
-                'poweredBy'           => '糯米引导页',
-                'poweredByUrl'        => 'https://github.com/YOUR_USERNAME/YOUR_REPO',
+                'poweredBy'           => '糯米の引导页',
+                'poweredByUrl'        => 'https://github.com/nmrt0316/MochiNav',
             ];
         }
     }
