@@ -1418,3 +1418,337 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
         grid-template-columns: repeat(2, 1fr);
     }
 }
+
+/* ==========================================================================
+   27. 在线升级页样式 (Online Upgrade Page)
+   --------------------------------------------------------------------------
+   供 admin/update.php 独立页面使用，不嵌入后台标签栏。
+   update.php 自身已内联大部分样式，此章节仅作为兜底与语义化补充：
+   - 如果将来把 update.php 的内联样式改到外部，可直接复用本章节
+   - 现阶段的 update.php 会把本文件（admin.css）作为主样式引入，
+     因此以下选择器必须保留，避免 .update-page 相关类丢失
+   ========================================================================== */
+
+/* 页面容器 */
+.update-page {
+    padding: 0;
+    min-height: 100vh;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background-attachment: fixed;
+}
+html[data-theme="dark"] .update-page {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+
+.update-container {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+}
+
+/* 顶部 */
+.update-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 4px 16px;
+    flex-wrap: wrap;
+}
+.update-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.update-header-left h1 {
+    color: #fff;
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+html[data-theme="dark"] .update-header-left h1 { color: #e8eaf6; }
+
+.update-header .btn-back {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    box-shadow: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+}
+.update-header .btn-back:hover {
+    background: rgba(255, 255, 255, 0.28);
+    box-shadow: none;
+}
+html[data-theme="dark"] .update-header .btn-back {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #e8eaf6;
+}
+html[data-theme="dark"] .update-header .btn-back:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+/* 卡片 */
+.update-card {
+    background: var(--bg-card, #ffffff);
+    border-radius: 14px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px var(--shadow-card, rgba(0, 0, 0, 0.06));
+    color: var(--text-main, #2c3e50);
+}
+.update-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: var(--text-main, #2c3e50);
+}
+
+/* 版本卡 */
+.update-version-card { text-align: center; }
+.update-version-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 24px;
+    padding: 8px 0 12px;
+    flex-wrap: wrap;
+}
+.update-version-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+.update-version-label {
+    font-size: 12px;
+    color: var(--text-muted, #909399);
+    letter-spacing: 0.3px;
+}
+.update-version-value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-main, #2c3e50);
+    font-family: Consolas, Menlo, monospace;
+}
+.update-version-arrow {
+    font-size: 20px;
+    color: var(--text-muted, #909399);
+    opacity: 0.5;
+}
+.update-status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12.5px;
+    background: var(--bg-chip, #f0f2f7);
+    color: var(--text-muted, #909399);
+}
+.update-status-badge.is-new {
+    background: rgba(245, 158, 11, 0.15);
+    color: #d97706;
+    font-weight: 600;
+}
+.update-status-badge.is-ok {
+    background: rgba(16, 185, 129, 0.14);
+    color: #059669;
+    font-weight: 600;
+}
+html[data-theme="dark"] .update-status-badge.is-new {
+    background: rgba(245, 158, 11, 0.22);
+    color: #fbbf24;
+}
+html[data-theme="dark"] .update-status-badge.is-ok {
+    background: rgba(16, 185, 129, 0.22);
+    color: #34d399;
+}
+
+/* 环境检测 */
+.update-env-row {
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    line-height: 1.6;
+}
+.update-env-row.is-ok {
+    background: rgba(16, 185, 129, 0.10);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.30);
+}
+.update-env-row.is-err {
+    background: rgba(239, 68, 68, 0.10);
+    color: #dc2626;
+    border: 1px solid rgba(239, 68, 68, 0.30);
+}
+html[data-theme="dark"] .update-env-row.is-ok {
+    background: rgba(16, 185, 129, 0.18);
+    color: #34d399;
+}
+html[data-theme="dark"] .update-env-row.is-err {
+    background: rgba(239, 68, 68, 0.18);
+    color: #f87171;
+}
+.update-env-meta {
+    font-size: 12.5px;
+    color: var(--text-code, #606266);
+    margin-top: 4px;
+    line-height: 1.6;
+    word-break: break-all;
+}
+.update-env-meta code {
+    font-family: Consolas, Menlo, monospace;
+    background: var(--bg-chip, #f0f2f7);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+.update-env-meta.is-err { color: #dc2626; }
+html[data-theme="dark"] .update-env-meta.is-err { color: #f87171; }
+
+/* 更新信息 */
+.update-release-line {
+    font-size: 13.5px;
+    margin-bottom: 4px;
+    color: var(--text-code, #606266);
+}
+.update-release-line b {
+    color: var(--text-main, #2c3e50);
+    font-family: Consolas, Menlo, monospace;
+}
+.update-release-body {
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 260px;
+    overflow-y: auto;
+    background: var(--bg-chip, #f0f2f7);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-code, #606266);
+    margin: 10px 0;
+    font-family: inherit;
+}
+html[data-theme="dark"] .update-release-body {
+    background: #33384e;
+    color: #c5c9e2;
+}
+.update-release-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+/* 操作区 */
+.update-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+}
+.update-actions .btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    justify-content: center;
+}
+.update-action-tip {
+    font-size: 12.5px;
+    color: var(--text-muted, #909399);
+    line-height: 1.6;
+    margin-top: 4px;
+}
+.update-action-empty {
+    padding: 12px;
+    text-align: center;
+    color: var(--text-muted, #909399);
+    font-size: 14px;
+}
+
+/* 进度条 */
+.update-progress { margin-top: 14px; }
+.update-progress-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--bg-chip, #f0f2f7);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 8px;
+}
+.update-progress-fill {
+    width: 0%;
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+    animation: updatePulse 1.8s ease-in-out infinite;
+}
+@keyframes updatePulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.65; }
+}
+.update-progress-text {
+    font-size: 12.5px;
+    color: var(--text-muted, #909399);
+    text-align: center;
+}
+
+/* 状态卡 */
+.update-state-line {
+    display: flex;
+    gap: 12px;
+    padding: 4px 0;
+    font-size: 13px;
+    align-items: flex-start;
+}
+.update-state-label {
+    color: var(--text-muted, #909399);
+    flex-shrink: 0;
+    min-width: 40px;
+}
+.update-state-value {
+    color: var(--text-main, #2c3e50);
+    word-break: break-all;
+    line-height: 1.6;
+    flex: 1;
+}
+.update-state-value.is-ok { color: #059669; font-weight: 600; }
+.update-state-value.is-err { color: #dc2626; font-weight: 600; }
+.update-state-value.is-warn { color: #d97706; font-weight: 600; }
+.update-state-value.is-loading { color: #2563eb; font-weight: 600; }
+html[data-theme="dark"] .update-state-value.is-ok { color: #34d399; }
+html[data-theme="dark"] .update-state-value.is-err { color: #f87171; }
+html[data-theme="dark"] .update-state-value.is-warn { color: #fbbf24; }
+html[data-theme="dark"] .update-state-value.is-loading { color: #79bbff; }
+
+/* 风险提示 */
+.update-warning {
+    margin-top: 20px;
+    padding: 12px 14px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.30);
+    border-radius: 12px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #92400e;
+}
+html[data-theme="dark"] .update-warning {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+}
+.update-warning code {
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 11.5px;
+    word-break: break-all;
+}
+html[data-theme="dark"] .update-warning code {
+    background: rgba(0, 0, 0, 0.25);
+}
