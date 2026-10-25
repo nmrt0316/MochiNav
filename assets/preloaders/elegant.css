@@ -1,0 +1,268 @@
+/* @name 浮光 */
+/* @description 紫罗兰柔光 + 涟漪 + 光痕进度条 */
+
+/* 遮罩容器 */
+#preloader { background: #fafbfd; }
+html[data-theme="dark"] #preloader { background: #0d0e14; }
+
+/* 主光斑 A（居中呼吸） */
+#preloader::before {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    width: 560px; height: 560px; border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(124, 108, 240, 0.20) 0%,
+        rgba(124, 108, 240, 0.06) 45%,
+        transparent 72%);
+    filter: blur(40px);
+    pointer-events: none;
+    will-change: transform, opacity;
+    animation: plAuraA 5s ease-in-out infinite;
+}
+html[data-theme="dark"] #preloader::before {
+    background: radial-gradient(circle,
+        rgba(124, 108, 240, 0.32) 0%,
+        rgba(124, 108, 240, 0.10) 45%,
+        transparent 72%);
+}
+
+/* 次光斑 B（错拍浮动） */
+#preloader::after {
+    content: '';
+    position: absolute; top: 50%; left: 50%;
+    width: 460px; height: 460px; border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(96, 165, 250, 0.16) 0%,
+        rgba(96, 165, 250, 0.05) 45%,
+        transparent 72%);
+    filter: blur(48px);
+    pointer-events: none;
+    will-change: transform, opacity;
+    animation: plAuraB 6.5s ease-in-out -2s infinite;
+}
+html[data-theme="dark"] #preloader::after {
+    background: radial-gradient(circle,
+        rgba(96, 165, 250, 0.24) 0%,
+        rgba(96, 165, 250, 0.08) 45%,
+        transparent 72%);
+}
+
+@keyframes plAuraA {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.9; }
+    50%      { transform: translate(-50%, -50%) scale(1.18); opacity: 1; }
+}
+@keyframes plAuraB {
+    0%, 100% { transform: translate(calc(-50% + 50px), calc(-50% - 30px)) scale(0.95); opacity: 0.75; }
+    50%      { transform: translate(calc(-50% + 20px), calc(-50% - 10px)) scale(1.10); opacity: 0.95; }
+}
+
+/* 内容容器 */
+.preloader-content { gap: 32px; }
+
+/* 头像：多层柔光悬浮 + 缓慢浮动 + 涟漪 */
+.preloader-avatar {
+    width: 84px; height: 84px;
+    opacity: 0;
+    transform: translateY(10px) scale(0.9);
+    animation: plAvatarIn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards,
+               plAvatarFloat 4.5s ease-in-out 1.3s infinite;
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.9),
+        0 0 0 4px rgba(124, 108, 240, 0.06),
+        0 8px 24px rgba(124, 108, 240, 0.16),
+        0 20px 48px rgba(124, 108, 240, 0.10);
+}
+html[data-theme="dark"] .preloader-avatar {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 0 0 4px rgba(124, 108, 240, 0.15),
+        0 8px 24px rgba(0, 0, 0, 0.40),
+        0 20px 48px rgba(124, 108, 240, 0.22);
+}
+
+.preloader-avatar::before,
+.preloader-avatar::after {
+    content: '';
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 1.2px solid rgba(124, 108, 240, 0.35);
+    pointer-events: none;
+    will-change: transform, opacity;
+    animation: plRipple 3.2s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+.preloader-avatar::after { animation-delay: 1.6s; }
+
+@keyframes plAvatarIn {
+    0%   { opacity: 0; transform: translateY(10px) scale(0.9); }
+    100% { opacity: 1; transform: translateY(0)    scale(1); }
+}
+@keyframes plAvatarFloat {
+    0%, 100% { transform: translateY(0); }
+    50%      { transform: translateY(-4px); }
+}
+@keyframes plRipple {
+    0%   { transform: scale(1); opacity: 0.55; }
+    70%  {                    opacity: 0.10; }
+    100% { transform: scale(2); opacity: 0; }
+}
+
+/* 标题：字距舒展 + 模糊消散 */
+.preloader-title {
+    font-family: PingFang SC, Helvetica Neue, Helvetica, Arial, sans-serif;
+    font-size: 19px;
+    font-weight: 400;
+    color: #4b5563;
+    line-height: 1.4;
+    opacity: 0;
+    letter-spacing: 0.22em;
+    padding-left: 0.22em;
+    filter: blur(6px);
+    transform: translateY(4px);
+    animation: plTitleIn 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.40s forwards;
+}
+html[data-theme="dark"] .preloader-title { color: #9ca3af; }
+
+@keyframes plTitleIn {
+    0%   { opacity: 0; letter-spacing: 0.42em; padding-left: 0.42em; filter: blur(6px); transform: translateY(4px); }
+    100% { opacity: 1; letter-spacing: 0.22em; padding-left: 0.22em; filter: blur(0);   transform: translateY(0); }
+}
+
+/* 进度条：一束光痕 + 前端光点呼吸 */
+.preloader-progress {
+    width: 220px; height: 1px;
+    border-radius: 1px;
+    background: rgba(124, 108, 240, 0.06);
+    opacity: 0;
+    animation: plBarFadeIn 1s ease 0.7s forwards;
+    overflow: visible;
+}
+html[data-theme="dark"] .preloader-progress { background: rgba(124, 108, 240, 0.10); }
+
+.preloader-progress-bar {
+    height: 100%; width: 0;
+    border-radius: 1px;
+    background: linear-gradient(90deg,
+        rgba(167, 139, 250, 0.00)  0%,
+        rgba(167, 139, 250, 0.10) 25%,
+        rgba(167, 139, 250, 0.45) 60%,
+        rgba(196, 181, 253, 0.95) 92%,
+        rgba(196, 181, 253, 1.00) 100%);
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: visible;
+}
+.preloader-progress-bar::after {
+    content: '';
+    position: absolute; right: 0; top: 50%;
+    width: 4px; height: 4px; border-radius: 50%;
+    background: #ffffff;
+    transform: translate(50%, -50%);
+    animation: plDotPulse 1.6s ease-in-out infinite;
+}
+@keyframes plDotPulse {
+    0%, 100% {
+        box-shadow: 0 0 6px  1px rgba(196, 181, 253, 1), 0 0 14px 3px rgba(167, 139, 250, 0.55);
+        transform: translate(50%, -50%) scale(1);
+    }
+    50% {
+        box-shadow: 0 0 10px 2px rgba(196, 181, 253, 1), 0 0 24px 6px rgba(167, 139, 250, 0.75);
+        transform: translate(50%, -50%) scale(1.35);
+    }
+}
+@keyframes plBarFadeIn { to { opacity: 1; } }
+
+/* 回访：进度条隐藏 + 彗星尾光环 */
+html.revisit #preloader .preloader-progress { display: none; }
+
+#preloader.is-revisit .preloader-avatar {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.9),
+        0 8px 24px rgba(124, 108, 240, 0.16),
+        0 0 60px   rgba(124, 108, 240, 0.22);
+}
+html[data-theme="dark"] #preloader.is-revisit .preloader-avatar {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 8px 24px rgba(0, 0, 0, 0.40),
+        0 0 60px   rgba(124, 108, 240, 0.32);
+}
+
+html.revisit #preloader.is-revisit .preloader-avatar::after {
+    content: '';
+    position: absolute; inset: -14px;
+    border-radius: 50%;
+    border: none;
+    background: radial-gradient(circle farthest-side at center,
+        transparent 58%,
+        rgba(167, 139, 250, 0.05) 68%,
+        rgba(167, 139, 250, 0.14) 78%,
+        rgba(167, 139, 250, 0.05) 88%,
+        transparent 100%);
+    animation: plRingBreath 3s ease-in-out infinite;
+    opacity: 1; transform: none;
+    will-change: opacity;
+}
+html[data-theme="dark"] #preloader.is-revisit .preloader-avatar::after {
+    background: radial-gradient(circle farthest-side at center,
+        transparent 58%,
+        rgba(150, 160, 250, 0.06) 68%,
+        rgba(150, 160, 250, 0.16) 78%,
+        rgba(150, 160, 250, 0.06) 88%,
+        transparent 100%);
+}
+@keyframes plRingBreath {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+}
+
+html.revisit #preloader.is-revisit .preloader-avatar::before {
+    content: '';
+    position: absolute; inset: -14px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(167, 139, 250, 0.00)   0deg,
+        rgba(167, 139, 250, 0.00)  50deg,
+        rgba(167, 139, 250, 0.06) 110deg,
+        rgba(167, 139, 250, 0.20) 170deg,
+        rgba(167, 139, 250, 0.50) 230deg,
+        rgba(167, 139, 250, 0.85) 290deg,
+        rgba(196, 181, 253, 1.00) 340deg,
+        rgba(196, 181, 253, 1.00) 352deg,
+        rgba(167, 139, 250, 0.00) 360deg
+    );
+    -webkit-mask: radial-gradient(farthest-side,
+        transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+            mask: radial-gradient(farthest-side,
+        transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+    filter: drop-shadow(0 0 5px rgba(167, 139, 250, 0.65));
+    animation: plRingSpin 1.8s linear infinite;
+    border: none; opacity: 1; transform: none; box-shadow: none;
+    will-change: transform;
+}
+html[data-theme="dark"] #preloader.is-revisit .preloader-avatar::before {
+    background: conic-gradient(
+        from 0deg,
+        rgba(150, 160, 250, 0.00)   0deg,
+        rgba(150, 160, 250, 0.00)  50deg,
+        rgba(150, 160, 250, 0.06) 110deg,
+        rgba(150, 160, 250, 0.24) 170deg,
+        rgba(150, 160, 250, 0.55) 230deg,
+        rgba(170, 170, 255, 0.90) 290deg,
+        rgba(200, 160, 255, 1.00) 340deg,
+        rgba(200, 160, 255, 1.00) 352deg,
+        rgba(150, 160, 250, 0.00) 360deg
+    );
+    filter: drop-shadow(0 0 6px rgba(150, 160, 250, 0.75));
+}
+@keyframes plRingSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* 手机端微调 */
+@media (max-width: 600px) {
+    .preloader-title { font-size: 17px; max-width: 86vw; }
+    .preloader-progress { width: 170px; }
+    .preloader-avatar { width: 74px; height: 74px; }
+    .preloader-content { gap: 28px; }
+}
