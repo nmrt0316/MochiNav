@@ -1,5 +1,4 @@
-<?php
-ob_start();
+<?php ob_start();
 /* ==========================================================================
    糯米の引导页 · 在线升级管理页 admin/update.php
    独立页面，不嵌入后台 12 个标签栏。
@@ -81,6 +80,9 @@ html[data-theme="dark"] body.update-page {
     font-weight: 600;
     margin: 0;
     letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 html[data-theme="dark"] .update-header-left h1 { color: #e8eaf6; }
 
@@ -375,7 +377,12 @@ html[data-theme="dark"] .update-header .btn-back:hover {
     <header class="update-header">
         <div class="update-header-left">
             <a class="btn btn-back" href="index.php">← 返回后台</a>
-            <h1>🔄 在线升级</h1>
+            <h1>
+                <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 2px;">
+                    <polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                </svg>
+                在线升级
+            </h1>
         </div>
         <button type="button" class="btn btn-ghost theme-toggle-btn" id="themeToggleBtn" title="切换主题" aria-label="切换主题"></button>
     </header>
@@ -636,14 +643,14 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         if (st === 'success') {
             var refreshBtn = document.createElement('button');
             refreshBtn.className = 'btn btn-primary';
-            refreshBtn.textContent = '🔄 刷新后台查看新版本';
+            refreshBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>刷新后台查看新版本';
             refreshBtn.onclick = function () { window.location.href = 'index.php'; };
             box.appendChild(refreshBtn);
 
             if (state.canRollback) {
                 var rbBtn = document.createElement('button');
                 rbBtn.className = 'btn';
-                rbBtn.style.cssText = 'background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);';
+                rbBtn.style.cssText = 'background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);margin-top:8px;';
                 rbBtn.textContent = '↩ 回滚到上一版本';
                 rbBtn.onclick = doRollback;
                 box.appendChild(rbBtn);
@@ -659,14 +666,23 @@ html[data-theme="dark"] .update-header .btn-back:hover {
         if (st === 'failed' || st === 'rolled_back') {
             var retryBtn = document.createElement('button');
             retryBtn.className = 'btn btn-primary';
-            retryBtn.textContent = '🔄 重新检查更新';
+            retryBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-bottom; margin-right: 4px;"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>重新检查更新';
             retryBtn.onclick = function () { doCheckUpdate(); };
             box.appendChild(retryBtn);
+
+            if (state.hasUpdate && state.env && state.env.writable) {
+                var reUpgradeBtn = document.createElement('button');
+                reUpgradeBtn.className = 'btn btn-primary';
+                reUpgradeBtn.style.marginTop = '8px';
+                reUpgradeBtn.textContent = '⬆ 再次尝试升级到 v' + state.latestVersion;
+                reUpgradeBtn.onclick = doUpgrade;
+                box.appendChild(reUpgradeBtn);
+            }
 
             if (state.canRollback) {
                 var rbBtn2 = document.createElement('button');
                 rbBtn2.className = 'btn';
-                rbBtn2.style.cssText = 'background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);';
+                rbBtn2.style.cssText = 'background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);margin-top:8px;';
                 rbBtn2.textContent = '↩ 回滚到上一版本';
                 rbBtn2.onclick = doRollback;
                 box.appendChild(rbBtn2);
