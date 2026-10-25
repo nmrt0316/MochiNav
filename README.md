@@ -131,8 +131,8 @@
 │   └── preloaders/           # 加载页 CSS 主题（自动创建）
 │       ├── sakura-spin.css   # 内置主题：樱花旋转
 │       ├── elegant.css       # 内置主题：浮光
-│       ├── apple.css         # 内置主题：苹果
-│       ├── tech.css          # 内置主题：科技感
+│       ├── apple.css         # 内置主题：Apple
+│       ├── tech.css          # 内置主题：脉冲
 │       ├── cyberpunk.css     # 内置主题：赛博朋克
 │       ├── ink.css           # 内置主题：水墨
 │       ├── minimal.css       # 内置主题：极简
@@ -143,7 +143,7 @@
 │       └── vaporwave.css     # 内置主题：蒸汽波
 ├── photos/                   # 图片存储目录（需写权限）
 │   ├── .htaccess             # 禁止在此目录执行脚本
-│   ├── TX.jpg                # 默认头像
+│   ├── QQ.jpg                # 默认头像
 │   ├── zy.png                # 默认分类图标「导航」
 │   ├── lx.png                # 默认分类图标「联系」
 │   ├── thumbs/               # 图片管理缩略图（自动创建）
@@ -152,6 +152,7 @@
 │   │   ├── 姐姐.gif
 │   │   ├── 喵小娘.gif
 │   │   ├── 月薪喵.gif
+│   │   ├── 七濑胡桃.gif
 │   │   ├── 舞娘娘.gif
 │   │   ├── 柠檬妹.gif
 │   │   └── 熊宝宝.gif
@@ -344,7 +345,7 @@ location ~ ^/photos/.*\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|jsp|asp|a
 
 ### 看板娘管理
 - 上传：点击虚线框或拖拽 GIF / PNG / WebP / JPG，单个 ≤ 10MB
-- 也可直接放入 `photos/kanban/`，刷新后台自动出现（内置 `妹妹.gif` / `姐姐.gif` / `喵小娘.gif` / `月薪喵.gif` / `舞娘娘.gif` / `柠檬妹.gif` / `熊宝宝.gif` 可作为默认形象）
+- 也可直接放入 `photos/kanban/`，刷新后台自动出现（内置 `妹妹.gif` / `姐姐.gif` / `喵小娘.gif` / `月薪喵.gif` / `七濑胡桃.gif` / `舞娘娘.gif` / `柠檬妹.gif` / `熊宝宝.gif` 可作为默认形象）
 - 启用 / 禁用：右上角开关
 - 排序：长按 `⋮⋮` 拖动，松手自动保存
 - 重命名：悬停点击 ✎，磁盘文件与显示名称同步修改
@@ -512,7 +513,7 @@ photos/
 
 - **前台**：
   - 网站图标 favicon、浏览器标签标题、主标题、副标题、头像
-  - **图片路径支持两种形式**：`photos/TX.jpg`（推荐，子目录部署也能正确解析）或 `/photos/TX.jpg`（根目录部署可用）
+  - **图片路径支持两种形式**：`photos/QQ.jpg`（推荐，子目录部署也能正确解析）或 `/photos/QQ.jpg`（根目录部署可用）
   - 背景轮播 API、Banner 轮播 API
   - **背景轮播间隔（秒，3~60，默认 10）**
   - **Banner 轮播间隔（秒，3~60，默认 6）**
@@ -552,13 +553,13 @@ photos/
 | `title` | 前台主标题 | `糯米の引导页` |
 | `subtitle` | 前台副标题 | `又一个引导页` |
 | `avatar` | 前台头像 | QQ 头像 URL |
-| `favicon` | 网站图标 | `photos/TX.jpg` |
+| `favicon` | 网站图标 | `photos/QQ.jpg` |
 | `bgApi` | 背景轮播 API | `https://www.loliapi.com/acg/` |
 | `bannerApi` | Banner 轮播 API | `https://www.loliapi.com/acg/pc/` |
 | `bgInterval` | 背景轮播间隔（秒，3 ~ 60） | `10` |
 | `bannerInterval` | Banner 轮播间隔（秒，3 ~ 60） | `6` |
 | `cacheLimit` | 每个缓存池上限张数（2 ~ 20） | `8` |
-| `adminAvatar` | 后台登录页头像 | `photos/TX.jpg` |
+| `adminAvatar` | 后台登录页头像 | `photos/QQ.jpg` |
 | `adminTitle` | 后台登录页标题 | `后台登录` |
 | `adminSubtitle` | 后台登录页副标题 | `糯米の引导页管理` |
 | `adminPageTitle` | 后台浏览器标签标题 | `糯米の引导页 · 后台管理` |
@@ -578,7 +579,7 @@ photos/
 | **`poweredBy`** | **页脚 Powered by 项目名** | **`糯米の引导页`** |
 | **`poweredByUrl`** | **页脚 Powered by 链接** | **同上** |
 
-> **默认路径约定**：`favicon` / `adminAvatar` 默认值是**不带前导 `/` 的相对路径**（`photos/TX.jpg`），根目录和子目录部署都能正确解析。老版本数据里如果存的是 `/photos/TX.jpg` 也照常使用，不受影响。
+> **默认路径约定**：`favicon` / `adminAvatar` 默认值是**不带前导 `/` 的相对路径**（`photos/QQ.jpg`），根目录和子目录部署都能正确解析。老版本数据里如果存的是 `/photos/QQ.jpg` 也照常使用，不受影响。
 
 > **默认 UA 约定**：`localBgUaId` 默认 `ua_mobile_default`（背景抓取抓竖图）、`localBannerUaId` 默认 `ua_desktop_default`（Banner 抓取抓横图）。想换方向，去「🎭 UA 伪装」页切换即可。
 
@@ -961,7 +962,7 @@ echo $raw;
 ### 添加看板娘
 - 将 GIF / PNG / WebP / JPG 放入 `photos/kanban/`，刷新后台自动识别
 - 或在后台「看板娘」标签页上传
-- 内置可用形象：`妹妹.gif` / `姐姐.gif` / `喵小娘.gif` / `月薪喵.gif` / `舞娘娘.gif` / `柠檬妹.gif` / `熊宝宝.gif`
+- 内置可用形象：`妹妹.gif` / `姐姐.gif` / `喵小娘.gif` / `月薪喵.gif` / `七濑胡桃.gif` / `舞娘娘.gif` / `柠檬妹.gif` / `熊宝宝.gif`
 
 ---
 
@@ -1080,7 +1081,7 @@ echo $raw;
 2. 后台运行在 `admin/` 子目录，PHP 渲染时会自动拼接 `../` 用于显示，**保存 JSON 不会写入 `../`**。
 3. `http://` 或 `https://` 开头的 CDN 图片 / JS 原样使用，不做路径转换。
 4. 前台直接使用这些根目录相对路径，不要写成 `../photos/xxx`。
-5. **默认 favicon / adminAvatar 使用不带前导 `/` 的形式**（`photos/TX.jpg`），根目录和子目录部署都能正确解析。老版本存成 `/photos/TX.jpg` 也照常使用。
+5. **默认 favicon / adminAvatar 使用不带前导 `/` 的形式**（`photos/QQ.jpg`），根目录和子目录部署都能正确解析。老版本存成 `/photos/QQ.jpg` 也照常使用。
 6. 缩略图路径**不落盘**，由原图路径推导。
 
 ---
@@ -1430,7 +1431,7 @@ A：自动分类会按图片的宽高比例自动打上 `desktop` 或 `mobile` �
 A：`admin/index.php` 顶部已关闭 `display_errors` 并开启 `log_errors`，PHP 报错只写入服务器错误日志。排查问题时去 PHP 错误日志找，或临时把 `display_errors` 改回 `'1'` 调试完再改回来。
 
 **Q：子目录部署时默认图标为什么会 404？**  
-A：老版本 `favicon` / `adminAvatar` 默认值写的是 `/photos/TX.jpg`（带前导 `/`）。**当前版本默认值已改为 `photos/TX.jpg`（不带前导 `/`）**，根目录和子目录部署都能正确解析。
+A：老版本 `favicon` / `adminAvatar` 默认值写的是 `/photos/QQ.jpg`（带前导 `/`）。**当前版本默认值已改为 `photos/QQ.jpg`（不带前导 `/`）**，根目录和子目录部署都能正确解析。
 
 **Q：删除图片时如何避免误删被引用的图？**  
 A：删除流程有**两层确认**：
@@ -1447,7 +1448,7 @@ A：打开 `admin/defaults.php`，修改 `define('NUOMI_VERSION', '1.1.0');` 这
 A：见上方「升级须知」章节。**必须保留**：`admin/data.json`、`admin/.admin.conf`、`photos/`、`assets/js/`、`assets/preloaders/`。
 
 **Q：`.gitignore` 里为什么排除了 `photos/*`？**  
-A：因为 `photos/` 里大多数是用户上传的图片，不应提交到仓库。`photos/TX.jpg`、`photos/zy.png`、`photos/lx.png` 通过 `!` 白名单保留。
+A：因为 `photos/` 里大多数是用户上传的图片，不应提交到仓库。`photos/QQ.jpg`、`photos/zy.png`、`photos/lx.png` 通过 `!` 白名单保留。
 
 **Q：首页公告条怎么关闭？关闭后还能恢复吗？**  
 A：点击公告条右侧的「✕」即可关闭。关闭后会记录在 `localStorage.nuomi_home_ann_dismissed` 里，**同一条公告**不再显示。如果后台修改了公告内容（ID 不变）仍然不显示；如果是新公告（新 ID），会重新显示。想恢复某条已关闭的公告，清除浏览器站点数据即可。
