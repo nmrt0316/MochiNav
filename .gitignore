@@ -1,0 +1,89 @@
+# ============================================
+# 糯米引导页 - 运行时数据（用户私有，不提交）
+# ============================================
+
+# 后台数据与账号
+admin/data.json
+admin/data.json.tmp.*
+admin/.admin.conf
+admin/*.bak
+
+# 在线升级临时目录（将来启用）
+admin/.update/
+
+# ============================================
+# 图片目录
+# ============================================
+
+# 用户上传的图片（保留默认头像 + 默认分类图标）
+photos/*
+!photos/TX.jpg
+!photos/zy.png
+!photos/lx.png
+!photos/.gitkeep
+
+# 缩略图缓存（自动生成，不提交）
+photos/thumbs/
+photos/kanban_thumbs/
+photos/localbg_thumbs/
+photos/localbanner_thumbs/
+
+# 看板娘（保留内置 7 个）
+photos/kanban/*
+!photos/kanban/妹妹.gif
+!photos/kanban/姐姐.gif
+!photos/kanban/喵小娘.gif
+!photos/kanban/月薪喵.gif
+!photos/kanban/舞娘娘.gif
+!photos/kanban/柠檬妹.gif
+!photos/kanban/熊宝宝.gif
+!photos/kanban/.gitkeep
+
+# 本地背景 / Banner（用户上传，不提交）
+photos/localbg/*
+!photos/localbg/.gitkeep
+photos/localbanner/*
+!photos/localbanner/.gitkeep
+
+# ============================================
+# 内置资源（保留，不提交用户上传的）
+# ============================================
+
+# JS 特效（保留内置 5 个）
+assets/js/*
+!assets/js/粒子微粒.js
+!assets/js/天气.js
+!assets/js/雪花飘落.js
+!assets/js/烟花波纹.js
+!assets/js/樱花飘落.js
+!assets/js/.gitkeep
+
+# 加载页主题（保留内置 12 个）
+assets/preloaders/*
+!assets/preloaders/sakura-spin.css
+!assets/preloaders/elegant.css
+!assets/preloaders/apple.css
+!assets/preloaders/tech.css
+!assets/preloaders/cyberpunk.css
+!assets/preloaders/ink.css
+!assets/preloaders/minimal.css
+!assets/preloaders/nature.css
+!assets/preloaders/neon.css
+!assets/preloaders/sakura.css
+!assets/preloaders/starry.css
+!assets/preloaders/vaporwave.css
+!assets/preloaders/.gitkeep
+
+# ============================================
+# 系统与编辑器文件
+# ============================================
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+*.tmp
+*.swp
+*~
+.vscode/
+.idea/
+*.sublime-workspace
