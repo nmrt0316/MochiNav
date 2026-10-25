@@ -1,0 +1,42 @@
+# ============================================
+# 糯米引导页 - 图片目录保护
+# 禁止在此目录执行任何脚本，防止上传 shell 被解析
+# ============================================
+
+# 禁止目录列表（IfModule 包裹，避免报 500）
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# 关闭 PHP 引擎（覆盖各版本模块名）
+<IfModule mod_php.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php7.c>
+    php_flag engine off
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag engine off
+</IfModule>
+
+# 移除脚本处理器与 MIME 类型
+<IfModule mod_mime.c>
+    RemoveHandler .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .jsp .asp .aspx .sh .cgi
+    RemoveType .php .phtml .php3 .php4 .php5 .php7 .php8 .phar
+</IfModule>
+
+# 双重保险：脚本后缀一律当纯文本返回
+<IfModule mod_mime.c>
+    AddType text/plain .php .phtml .php3 .php4 .php5 .php7 .php8 .phar .pl .py .jsp .asp .aspx .sh .cgi
+</IfModule>
+
+# 拒绝直接访问脚本后缀
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|jsp|asp|aspx|sh|cgi)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>
