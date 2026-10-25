@@ -4,7 +4,7 @@
 ![PHP](https://img.shields.io/badge/PHP-7.3%2B-777bb4)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
-一个基于 PHP + JSON 的个人引导页/导航站，自带 PHP 后台管理面板。无需手动修改 HTML，即可维护分类、卡片、图片、JS 特效、看板娘、加载页主题、本地背景兜底、UA 伪装、公告、全站统计代码和站点显示配置。
+一个基于 PHP + JSON 的个人引导页/导航站，自带 PHP 后台管理面板。无需手动修改 HTML，即可维护分类、卡片、图片、JS 特效、看板娘、加载页主题、本地背景兜底、UA 伪装、公告、全站统计代码、站点显示配置，并支持**在线一键升级与回滚**。
 
 ---
 
@@ -13,6 +13,7 @@
 1. 下载源码，上传到 PHP 网站根目录
 2. 访问 `https://你的域名/admin`，跟随 4 步安装向导完成设置（约 2 分钟）
 3. 登录后台，在「站点设置」里改标题、头像
+4. 之后想升级，后台顶部栏点「🔄 检查更新」即可在线升级（需服务器支持在线覆盖代码）
 
 > 无需数据库、无需 Composer、无需构建工具。支持 PHP 7.3+。
 
@@ -28,19 +29,63 @@
 |---|---|
 | `admin/data.json` | 卡片、分类、站点配置、公告等全部数据 |
 | `admin/.admin.conf` | 管理员账号 |
+| `admin/.update/` | 在线升级缓存、更新包、代码备份、升级状态 |
 | `photos/` | 所有上传的图片（含头像、图标、看板娘、本地背景） |
 | `assets/js/` | 上传的 JS 特效 |
 | `assets/preloaders/` | 上传的加载页主题 |
 
 其余文件（`*.php` / `*.css` / `*.js` / `*.md`）可直接覆盖。
 
-**升级步骤**：
+### 方式一：在线升级（推荐，v1.2.0 起）
 
-1. 下载新版本压缩包
-2. 解压后覆盖上传（跳过上面「保留」清单中的文件）
+后台顶部栏点击「🔄 检查更新」→ 进入 `admin/update.php` 独立升级页：
+
+1. **自动检查更新**：对接 GitHub Releases API，5 分钟本地缓存（避免触发 GitHub 60 次/小时速率限制），用 `version_compare` 比较版本号
+2. **环境检测**：自动测试 PHP 运行用户能否在项目根目录创建 / 覆盖 / 删除文件
+   - ✅ 支持 → 显示「⬆ 立即升级」按钮
+   - ❌ 不支持（共享主机 / 文件所有者与 PHP 运行用户不一致）→ 显示「🔗 去 GitHub 下载」按钮，跳转 Releases 页面手动覆盖
+3. **下载更新包**：从 Release 的 `assets` 数组里找第一个 `.zip`，自动 SHA256 校验（如果 Release 提供了 `digest`），解压到 `admin/.update/package/`
+4. **应用升级**：
+   - 先把当前代码备份到 `admin/.update/backup/<时间戳>/`
+   - 逐个覆盖，**跳过保留清单里的所有路径**
+   - 失败自动回滚
+   - 成功后写入升级历史
+5. **一键回滚**：随时用最近一次备份覆盖当前代码（`state.json` 转为 `rolled_back`）
+
+**在线升级绝不动这些路径**（即使 Release 包里带了也不覆盖）：
+
+- `admin/data.json`
+- `admin/.admin.conf`
+- `admin/.update/`
+- `photos/`
+- `assets/js/`
+- `assets/preloaders/`
+- `README.md`
+- `LICENSE`
+- `CHANGELOG.md`
+
+**在线升级的其他保护措施**：
+
+- **路径穿越防护**：拒绝 `..`、绝对路径、Windows 盘符
+- **下载地址白名单**：只认 `github.com` / `raw.githubusercontent.com` / `objects.githubusercontent.com` / `codeload.github.com`
+- **覆盖白名单**：仅允许覆盖 `admin/`、`assets/`、`index.php`、`404.php`、`announcement.php`、`analytics.php`
+- **解压后总大小上限**：200MB（防 zip 炸弹）
+- **并发锁**：`flock(LOCK_EX | LOCK_NB)`，防止两次升级同时进行
+- **状态原子写入**：`state.json` / `history.json` 用 tmp + rename 原子写入
+- **卡死自愈**：`applying` 状态超过 10 分钟自动转 `failed`
+
+### 方式二：手动覆盖升级
+
+如果服务器不支持在线升级（环境检测未通过），或您想完全手动控制：
+
+1. 下载新版本压缩包（到项目 Releases 页面）
+2. 解压后覆盖上传（**跳过上面「保留」清单中的文件**）
 3. 访问 `/admin` 刷新，后台顶部栏会显示新的版本号
 
-> 将来会支持「后台一键升级」（对接 GitHub Releases API），届时无需手动覆盖。
+> **提示**：共享主机常见的「不支持在线升级」原因是 PHP 运行用户（如 `www-data`）与文件所有者（如 `nobody`）不一致。解决方案：
+> - 让主机商把项目目录所有者改为 PHP 运行用户
+> - 或给项目目录设置 `775` 权限并确保两者在同一用户组
+> - 或不折腾，直接手动覆盖升级
 
 ---
 
@@ -83,6 +128,7 @@
 ### 后台
 - 🔐 **安全登录**：首次访问初始化管理员，密码哈希存储，`.admin.conf` 防直读；**生产环境已关闭 `display_errors` 并开启 `log_errors`，PHP 报错写入日志而不暴露给访问者**
 - 🧭 **4 步安装向导**：管理员账号 → 站点信息 → 行为配置 → 完成预览，首次安装约 2 分钟，所有字段留空则回退默认值
+- 🔄 **在线升级**：后台顶部栏「🔄 检查更新」按钮进入 `admin/update.php` 独立升级页，对接 GitHub Releases API，5 分钟缓存，自动检查版本 → 环境检测 → 下载更新包（SHA256 校验 + 路径穿越防护）→ 应用升级（先备份再覆盖，失败自动回滚）→ 一键回滚。**环境不支持时自动降级为「去 GitHub 下载」按钮**
 - 📋 **卡片管理**：新增、编辑、删除、拖拽排序；支持链接 / 图片两种类型
 - 🗂 **分类管理**：新增、重命名、修改图标、删除；分类下有卡片时禁止删除；支持长按拖动排序
 - 🖼 **图片管理**：上传、删除、重命名、排序、预览；**重命名自动同步卡片图标 / 弹窗大图 / 分类图标，以及站点设置里的头像 / favicon / 后台头像**（带前导 `/` 与不带 `/` 两种形式都覆盖）；**删除采用两层确认**：先弹常规确认（防误点）→ 后端检测引用 → 若图片正在被卡片、分类或站点设置使用，再弹第二个弹窗列出所有引用位置，确认后带 `force` 重试并同步清空对应引用（头像 / 网站图标回退到默认值），避免留下裂图
@@ -116,14 +162,22 @@
 ├── 404.php                   # 自定义 404 页面（「查看公告」跳转到 announcement.php）
 ├── admin/                    # 后台管理目录
 │   ├── index.php             # 后台管理入口
-│   ├── defaults.php          # 默认值唯一权威来源（前后台共用）
+│   ├── update.php            # 在线升级页（独立页面，不嵌入标签栏）
+│   ├── defaults.php          # 默认值唯一权威来源（前后台共用 + 升级常量）
 │   ├── data.json             # 数据文件（首次安装生成）
 │   ├── .admin.conf           # 管理员账号配置（PHP 防直读，密码哈希）
 │   ├── .htaccess             # 保护 .admin.conf / data.json 不被直接下载
-│   └── .update/              # 在线升级临时目录（将来启用）
+│   └── .update/              # 在线升级工作目录（自动创建）
+│       ├── update.lock       # 并发锁
+│       ├── github_release_cache.json  # GitHub Release 5 分钟缓存
+│       ├── package.zip       # 下载的更新包
+│       ├── package/          # 解压后的更新包
+│       ├── state.json        # 升级状态机（tmp+rename 原子写入）
+│       ├── history.json      # 升级历史（最多保留 50 条）
+│       └── backup/           # 代码备份（按时间戳分目录，保留最近 3 份）
 ├── assets/                   # 静态资源
 │   ├── style.css             # 前台样式
-│   ├── admin.css             # 后台样式
+│   ├── admin.css             # 后台样式（含第 27 章在线升级页样式）
 │   ├── frontend.js           # 前台脚本
 │   ├── admin.js              # 后台脚本
 │   ├── mascot.js             # 看板娘 + 特效控制器
@@ -167,11 +221,12 @@
 └── README.md
 ```
 
-> 后台会自动创建 `photos/`、`photos/thumbs/`、`photos/kanban/`、`photos/kanban_thumbs/`、`photos/localbg/`、`photos/localbg_thumbs/`、`photos/localbanner/`、`photos/localbanner_thumbs/`、`assets/js/`、`assets/preloaders/` 目录（如果不存在）。  
-> `admin/defaults.php` 是所有默认值（`site_defaults()` / `tips_defaults()` / `factory_defaults()` / `ua_builtin_templates()`）的**唯一权威来源**，前后台共用，避免重复定义和配置漂移。  
+> 后台会自动创建 `photos/`、`photos/thumbs/`、`photos/kanban/`、`photos/kanban_thumbs/`、`photos/localbg/`、`photos/localbg_thumbs/`、`photos/localbanner/`、`photos/localbanner_thumbs/`、`assets/js/`、`assets/preloaders/`、`admin/.update/` 目录（如果不存在）。  
+> `admin/defaults.php` 是所有默认值（`site_defaults()` / `tips_defaults()` / `factory_defaults()` / `ua_builtin_templates()`）和升级常量（`UPDATE_GITHUB_REPO` / `UPDATE_DIR` / `UPDATE_MAX_PACKAGE_MB` / `UPDATE_MAX_EXTRACTED_MB` / `UPDATE_BACKUP_KEEP`）的**唯一权威来源**，前后台共用，避免重复定义和配置漂移。  
 > `admin/data.json` 与 `admin/.admin.conf` 会在首次安装 / 保存时生成。  
 > `assets/preloaders/` 中实际存在的 `.css` 会被后台自动扫描，内置主题数量以目录为准。  
-> `photos/localbg/` 与 `photos/localbanner/` 是**平铺目录**：桌面端 / 移动端 / 通用的图**混合存放**在同一目录，靠 `data.json` 里的 `target` 字段区分（前台按方向过滤，后台可直接一键分类并按方向分组展示）。
+> `photos/localbg/` 与 `photos/localbanner/` 是**平铺目录**：桌面端 / 移动端 / 通用的图**混合存放**在同一目录，靠 `data.json` 里的 `target` 字段区分（前台按方向过滤，后台可直接一键分类并按方向分组展示）。  
+> `admin/.update/` 是**在线升级工作目录**，只由 `admin/update.php` 与 `admin/index.php` 的 `update_*` API 读写，**绝不允许被升级包覆盖**。
 
 ---
 
@@ -182,12 +237,14 @@
 - 支持 JSON 扩展
 - 浏览器支持 IndexedDB（现代浏览器均支持）
 - **抓取本地背景需要**：允许 `allow_url_fopen`，或服务器能访问外网
+- **在线升级需要**：PHP `zip` 扩展（`ZipArchive`），服务器能访问 `api.github.com` 和 `github.com`
 - **PHP 图片扩展（至少其一，用于生成缩略图）**：
   - **Imagick**（推荐）：处理大图用磁盘缓存，几乎不吃 PHP 内存
   - **GD**：PHP 默认扩展，大部分主机自带；内存受限时单张处理 4000×3000 以内较稳
   - **两者都没有也不影响使用**，只是不生成缩略图（自动退回原图显示），其它功能完全正常
 - 目录写权限：
   - `admin/`：写入 `data.json` 和 `.admin.conf`
+  - `admin/.update/`：在线升级工作目录（自动创建）
   - `photos/`：上传图片
   - `photos/thumbs/`：图片管理缩略图（自动创建）
   - `photos/kanban/`：上传看板娘，自动创建
@@ -236,6 +293,9 @@
 5. **首次进后台会生成缩略图**  
    首次登录后会为已有的所有图片生成缩略图，**每个请求最多处理 30 张**，防止 PHP 内存爆掉。图片多的话可以**多刷新几次后台**，缩略图会逐渐补齐。缩略图生成期间不影响后台的其它操作。
 
+6. **想在线升级的话**  
+   确认服务器装了 PHP `zip` 扩展、能访问 `api.github.com`；后台顶部栏点「🔄 检查更新」，环境检测通过后就能在线升级。环境不通过时点「🔗 去 GitHub 下载」手动覆盖即可。
+
 ### Nginx
 
 `.htaccess` 在 Nginx 下**不生效**，需要在站点配置里手动加以下规则，否则 `.admin.conf` / `data.json` 可能被直接下载，`photos/` 里的脚本可能被执行：
@@ -243,6 +303,12 @@
 ```nginx
 # 保护后台敏感文件
 location ~ ^/admin/.*\.(conf|json|bak|tmp|log|md)$ {
+    deny all;
+    return 404;
+}
+
+# 保护在线升级工作目录
+location ~ ^/admin/\.update/ {
     deny all;
     return 404;
 }
@@ -260,7 +326,7 @@ location ~ ^/photos/.*\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|jsp|asp|a
 
 ### 共享主机
 
-大多数共享主机支持 Apache，`.htaccess` 自动生效。如果 PHP 运行用户和文件所有者不同（常见情况），在线升级（将来版本）可能不可用，需要手动覆盖升级。
+大多数共享主机支持 Apache，`.htaccess` 自动生效。**共享主机用户在线升级大概率会因权限不一致失败**（PHP 运行用户 ≠ 文件所有者），环境检测不通过时会自动降级为「去 GitHub 下载」，请按 README 手动覆盖升级。
 
 ---
 
@@ -270,6 +336,23 @@ location ~ ^/photos/.*\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|jsp|asp|a
 - 未初始化时，前台任意页面会自动跳转到 `/admin` 进行安装
 - 初始化完成后：前台首页在配置的时间窗口内连续点击头像达到配置次数，自动跳转 `/admin/index.php`（默认 10 次 / 10 秒）
 - 或直接访问 `/admin`
+
+### 在线升级（🔄 检查更新）
+
+后台顶部栏点击「🔄 检查更新」进入 `admin/update.php`：
+
+1. **自动检查**：打开页面即自动拉取 GitHub Releases 最新版本，显示当前版本 / 最新版本 / 是否有更新
+2. **环境检测**：显示 PHP 运行用户、文件所有者、是否可写
+   - ✅ 可写 → 显示「⬆ 立即升级」按钮
+   - ❌ 不可写 → 显示「🔗 去 GitHub 下载」按钮，并展示具体原因
+3. **一键升级**：点「立即升级」→ 自动下载 → SHA256 校验 → 解压 → 备份 → 覆盖 → 完成
+4. **一键回滚**：升级完成后，如果新版本有问题，点「↩ 回滚到上一版本」即可
+
+**注意**：
+- 在线升级只换代码文件，`data.json`、`photos/`、`assets/js/`、`assets/preloaders/` 永远不动
+- 升级前会备份当前代码到 `admin/.update/backup/<时间戳>/`，默认保留最近 3 份
+- 如果升级过程中遇到网络问题导致卡住，10 分钟后状态会自动转 `failed`，重新进升级页即可继续
+- 升级成功后记得 **Ctrl+F5 强制刷新** 后台，让浏览器加载新版本的 `admin.js` / `admin.css`
 
 ### 安装向导（4 步）
 1. **管理员账号**：用户名 + 密码（至少 6 位）+ 确认密码
@@ -535,7 +618,8 @@ photos/
 - **完全清空**：清空全部配置、所有图片目录、管理员账号，确认词 `CLEAR`，操作后需要重新初始化
 
 > 「指定内容」勾选「UA 模板」会清除所有自定义模板，仅保留两个内置模板；勾选「公告」会清空所有公告；「清除全部」/「完全清空」会重置或清空 UA 配置与公告。  
-> 清除图片 / 看板娘 / 本地背景时，对应的缩略图目录也会一并清空。
+> 清除图片 / 看板娘 / 本地背景时，对应的缩略图目录也会一并清空。  
+> 清除数据**不会**清除 `admin/.update/` 在线升级工作目录（升级缓存、备份、状态都保留）。
 
 ### 账号设置
 - 修改用户名：需验证当前密码
@@ -1188,6 +1272,80 @@ echo $raw;
 
 ---
 
+## 🔄 在线升级机制
+
+在线升级由 `admin/update.php`（前端页面）+ `admin/index.php` 的 5 个 `update_*` API（后端逻辑）+ `admin/.update/`（工作目录）三部分组成。
+
+### API 一览
+
+| Action | 说明 |
+|---|---|
+| `update_check` | 拉取 GitHub Releases 最新版本（5 分钟缓存），返回版本对比 + 更新说明 + 下载地址 + 环境检测结果 |
+| `update_download` | 下载 zip → SHA256 校验 → 解压到 `admin/.update/package/`，状态转 `downloaded` |
+| `update_apply` | 备份当前代码 → 逐个覆盖 → 成功则 `success`，失败自动回滚 |
+| `update_rollback` | 用最近一次备份覆盖当前代码，状态转 `rolled_back` |
+| `update_status` | 返回当前状态机、是否有可回滚备份、当前版本 |
+
+### 状态机
+
+```text
+idle → downloading → downloaded → applying → success
+                                          ↘ failed
+                                          ↘ rolled_back（手动触发）
+```
+
+- `applying` 超过 10 分钟自动转 `failed`
+- `state.json` / `history.json` 用 tmp + rename 原子写入
+- 并发锁 `flock(LOCK_EX | LOCK_NB)`，拿不到锁时直接返回「已有升级进程正在进行」
+
+### GitHub API 对接
+
+- **接口**：`https://api.github.com/repos/{UPDATE_GITHUB_REPO}/releases/latest`
+- **请求头**：必须带 `User-Agent`（GitHub 强制要求），已内置 `NuomiNav-Updater/1.0`
+- **版本号**：从 `tag_name` 读，`ltrim($tag, 'vV')` 转成纯版本号（兼容 `v1.2.0` 和 `1.2.0`）
+- **下载地址**：从 `assets` 数组里找第一个 `.zip` 结尾的 `browser_download_url`
+- **SHA256**：如果 asset 的 `digest` 字段是 `sha256:xxx` 格式，自动校验
+- **缓存**：`admin/.update/github_release_cache.json`，5 分钟内不重复请求（避免触发 GitHub 60 次/小时速率限制）
+- **更新说明**：从 `body` 字段读（Markdown 格式，前端按纯文本展示）
+
+### 环境检测
+
+`update_env_check()` 会在项目根目录和 `admin/` 目录分别做一次「创建 → 删除」测试文件，判断 PHP 运行用户是否有写权限：
+
+- ✅ 通过 → 返回 `writable: true`，前端显示「⬆ 立即升级」
+- ❌ 失败 → 返回 `writable: false` + `reason`（含 PHP 运行用户 / 文件所有者），前端显示「🔗 去 GitHub 下载」
+
+### 安全防护
+
+| 防护 | 说明 |
+|---|---|
+| 路径穿越 | 拒绝 `..`、绝对路径（`/` 开头）、Windows 盘符（`C:`） |
+| 下载白名单 | 只认 `github.com` / `raw.githubusercontent.com` / `objects.githubusercontent.com` / `codeload.github.com` |
+| 覆盖白名单 | 仅允许覆盖 `admin/`、`assets/`、`index.php`、`404.php`、`announcement.php`、`analytics.php` |
+| 保留清单 | `admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/`、`assets/js/`、`assets/preloaders/`、`README.md`、`LICENSE`、`CHANGELOG.md` **永不覆盖** |
+| 大小限制 | 下载 zip 上限 200MB（`UPDATE_MAX_PACKAGE_MB`），解压后总大小上限 200MB（`UPDATE_MAX_EXTRACTED_MB`） |
+| 并发锁 | `flock(LOCK_EX \| LOCK_NB)` |
+| 原子写入 | `state.json` / `history.json` 用 tmp + rename |
+| 后台 JS 隔离 | 升级页面的 JS 只调用自己的 5 个 `update_*` API，不直接请求 GitHub |
+
+### 升级历史
+
+每次升级成功 / 回滚都会往 `admin/.update/history.json` 里追加一条记录（最多保留 50 条），包含：时间、从哪个版本、到哪个版本、状态、应用文件数、备份目录。
+
+### 修改 GitHub 仓库地址
+
+默认对接 `nmrt0316/MochiNav`。想改成自己的仓库：打开 `admin/defaults.php`，找到：
+
+```php
+if (!defined('UPDATE_GITHUB_REPO')) {
+    define('UPDATE_GITHUB_REPO', 'nmrt0316/MochiNav');
+}
+```
+
+把 `nmrt0316/MochiNav` 改成你自己的 `owner/repo` 即可。
+
+---
+
 ## ❓ 常见问题
 
 **Q：未安装时访问前台会怎样？**  
@@ -1445,7 +1603,7 @@ A：从备份恢复，或临时把 `admin/data.json` 重命名为 `data.json.bak
 A：打开 `admin/defaults.php`，修改 `define('NUOMI_VERSION', '1.1.0');` 这一行。后台顶部栏会自动显示新版本。
 
 **Q：升级时保留哪些文件？**  
-A：见上方「升级须知」章节。**必须保留**：`admin/data.json`、`admin/.admin.conf`、`photos/`、`assets/js/`、`assets/preloaders/`。
+A：见上方「升级须知」章节。**必须保留**：`admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/`、`assets/js/`、`assets/preloaders/`。
 
 **Q：`.gitignore` 里为什么排除了 `photos/*`？**  
 A：因为 `photos/` 里大多数是用户上传的图片，不应提交到仓库。`photos/QQ.jpg`、`photos/zy.png`、`photos/lx.png` 通过 `!` 白名单保留。
@@ -1458,6 +1616,33 @@ A：是的，首页公告条只取**最新一条启用的公告**（置顶优先
 
 **Q：公告页为什么从卡片风格改成了列表风格？**  
 A：列表风格更接近主流公告页的阅读体验——时间在左上、标题大字、正文紧凑，长文阅读不累。4 种类型仍通过左侧徽章和颜色区分。
+
+**Q：怎么进入在线升级页？**  
+A：后台顶部栏（登录后）点「🔄 检查更新」按钮，或直接访问 `https://你的域名/admin/update.php`。
+
+**Q：在线升级提示「环境不支持」怎么办？**  
+A：说明 PHP 运行用户无法在项目根目录创建 / 覆盖 / 删除文件。常见于共享主机（PHP 运行用户 `www-data` ≠ 文件所有者 `nobody`）。三种解决方案：
+1. 让主机商把项目目录所有者改为 PHP 运行用户
+2. 给项目目录设置 `775` 权限并确保两者在同一用户组
+3. 直接点「🔗 去 GitHub 下载」按钮，手动覆盖升级
+
+**Q：在线升级会不会覆盖我的 data.json / 照片？**  
+A：**不会**。升级过程会自动跳过 `admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/`、`assets/js/`、`assets/preloaders/`、`README.md`、`LICENSE`、`CHANGELOG.md`，即使 Release 包里带了这些路径也不会覆盖。
+
+**Q：在线升级失败了怎么办？**  
+A：升级失败会自动回滚到升级前的状态。如果回滚也失败，可以手动点「↩ 回滚到上一版本」用最近一次备份覆盖。备份默认保留最近 3 份（`UPDATE_BACKUP_KEEP`），存放在 `admin/.update/backup/<时间戳>/`。
+
+**Q：升级成功但顶部栏版本号还是旧版本？**  
+A：升级完成后按 **Ctrl+F5** 强制刷新后台，让浏览器加载新版本的 `admin.js` / `admin.css`。如果还是旧版本，说明服务器/CDN 缓存了旧 HTML，需要清除缓存。
+
+**Q：在线升级请求 GitHub API 会不会触发速率限制？**  
+A：不会。`update_check` 有 5 分钟本地缓存（`admin/.update/github_release_cache.json`），5 分钟内重复检查不会重新请求 GitHub。GitHub 未认证请求的速率限制是 60 次/小时，正常使用完全够。
+
+**Q：能配置成自己的 GitHub 仓库吗？**  
+A：可以。打开 `admin/defaults.php`，找到 `UPDATE_GITHUB_REPO` 常量，把 `nmrt0316/MochiNav` 改成你自己的 `owner/repo` 即可。
+
+**Q：升级后想回退到旧版本怎么办？**  
+A：进 `admin/update.php`，点「↩ 回滚到上一版本」按钮，会用最近一次备份覆盖当前代码。**注意**：回滚只回滚代码，不回滚 `data.json` / `photos/`（这些升级过程本来就没动过）。
 
 ---
 
