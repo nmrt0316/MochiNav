@@ -1,5 +1,7 @@
 # 糯米の引导页 · 个人导航站
 
+[![Live Demo](https://img.shields.io/badge/🚀_在线演示-点击访问-blue?style=for-the-badge)](https://nmrt0316.dpdns.org)
+
 ![版本](https://img.shields.io/badge/version-1.1.0-blue)
 ![PHP](https://img.shields.io/badge/PHP-7.3%2B-777bb4)
 ![License](https://img.shields.io/badge/License-MIT-green)
