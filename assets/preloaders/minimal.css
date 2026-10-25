@@ -1,0 +1,85 @@
+/* @name 极简 */
+/* @description 纯色背景 + 单点动效 + 极细进度线 */
+
+#preloader { background: #ffffff; }
+html[data-theme="dark"] #preloader { background: #101013; }
+
+.preloader-content { gap: 26px; }
+
+.preloader-avatar {
+    width: 76px; height: 76px;
+    opacity: 0;
+    transform: scale(0.94);
+    animation: minAvatarIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.06),
+        0 1px 3px rgba(0, 0, 0, 0.06);
+}
+html[data-theme="dark"] .preloader-avatar {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 1px 3px rgba(0, 0, 0, 0.45);
+}
+@keyframes minAvatarIn {
+    0%   { opacity: 0; transform: scale(0.94); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.preloader-title {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #1d1d1f;
+    line-height: 1.4;
+    opacity: 0;
+    letter-spacing: 0.15em;
+    padding-left: 0.15em;
+    animation: minTitleIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+}
+html[data-theme="dark"] .preloader-title { color: #e8e8ed; }
+@keyframes minTitleIn {
+    0%   { opacity: 0; transform: translateY(2px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+.preloader-progress {
+    width: 180px; height: 1px;
+    background: rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    animation: minBarFadeIn 0.7s ease 0.5s forwards;
+}
+html[data-theme="dark"] .preloader-progress { background: rgba(255, 255, 255, 0.08); }
+.preloader-progress-bar {
+    height: 100%; width: 0;
+    background: #1d1d1f;
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html[data-theme="dark"] .preloader-progress-bar { background: #e8e8ed; }
+@keyframes minBarFadeIn { to { opacity: 1; } }
+
+html.revisit #preloader .preloader-progress {
+    width: 8px;
+    background: transparent;
+    display: block;
+    margin: 0 auto;
+    animation: minDot 1.4s ease-in-out infinite;
+}
+html.revisit #preloader .preloader-progress-bar { display: none; }
+@keyframes minDot {
+    0%, 100% { opacity: 0.3; transform: scale(1); background: #1d1d1f; }
+    50%      { opacity: 1;   transform: scale(1.6); background: #1d1d1f; }
+}
+html[data-theme="dark"].revisit #preloader .preloader-progress { background: transparent; }
+html[data-theme="dark"].revisit #preloader .preloader-progress::after {
+    content: '';
+    display: block;
+    width: 4px; height: 4px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: #e8e8ed;
+    animation: minDot2 1.4s ease-in-out infinite;
+}
+@keyframes minDot2 {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.6); }
+}
