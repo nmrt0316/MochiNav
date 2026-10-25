@@ -1,7 +1,7 @@
 <?php ob_start(); ?>
 <?php
 /* ==========================================================================
-   糯米引导页 - 后台管理入口 admin/index.php
+   糯米の引导页 - 后台管理入口 admin/index.php
    ========================================================================== */
 
 /* ==========================================================================
@@ -2970,7 +2970,7 @@ if (empty($adminPreloaders)) {
             <img src="<?= e(admin_img_src($siteCfg['adminAvatar'])) ?>" alt="头像" decoding="async">
         </div>
         <h1 class="auth-title">安装向导</h1>
-        <p class="auth-sub" id="initSubtitle">欢迎使用糯米引导页，请跟随向导完成安装</p>
+        <p class="auth-sub" id="initSubtitle">欢迎使用糯米の引导页，请跟随向导完成安装</p>
 
         <form id="initForm" class="auth-form init-form" autocomplete="off">
             <div class="init-step-panel active" data-step="1">
@@ -3153,7 +3153,7 @@ if (empty($adminPreloaders)) {
     <header class="admin-header">
         <div class="admin-header-left">
             <span class="header-title"><?= e($siteCfg['adminHeaderTitle']) ?></span>
-            <span class="header-version" title="糯米引导页当前版本">v<?= NUOMI_VERSION ?></span>
+            <span class="header-version" title="糯米の引导页当前版本">v<?= NUOMI_VERSION ?></span>
         </div>
         <div class="admin-header-right">
             <button class="btn btn-ghost theme-toggle-btn" id="themeToggleBtn" title="切换主题" aria-label="切换主题">
@@ -3823,7 +3823,7 @@ if (empty($adminPreloaders)) {
                             <span class="small muted">只统计该时间窗口内的点击，超时自动清零，默认 10 秒。</span>
                         </label>
                         <label>页脚版权信息
-                            <input type="text" name="copyright" value="<?= e($siteCfg['copyright'] ?? '') ?>" maxlength="120" placeholder="例如 © 2026 糯米引导页">
+                            <input type="text" name="copyright" value="<?= e($siteCfg['copyright'] ?? '') ?>" maxlength="120" placeholder="例如 © 2026 糯米の引导页">
                             <span class="small muted">显示在页面底部居中位置。留空则不显示。</span>
                         </label>
                         <label>页脚 GitHub 链接
@@ -3842,7 +3842,7 @@ if (empty($adminPreloaders)) {
                             </label>
                         </div>
                         <label>页脚：Powered by 项目名
-                            <input type="text" name="poweredBy" value="<?= e($siteCfg['poweredBy'] ?? '') ?>" maxlength="60" placeholder="例如 糯米引导页">
+                            <input type="text" name="poweredBy" value="<?= e($siteCfg['poweredBy'] ?? '') ?>" maxlength="60" placeholder="例如 糯米の引导页">
                             <span class="small muted">显示在页脚第二行，前面自动加「Powered by 」。留空则不显示该行。</span>
                         </label>
                         <label>页脚：Powered by 链接
