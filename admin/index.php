@@ -4045,8 +4045,10 @@ if (empty($adminPreloaders)) {
             <button class="btn btn-ghost theme-toggle-btn" id="themeToggleBtn" title="切换主题" aria-label="切换主题">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/></svg>
             </button>
-            <!-- 增加 btn-view-home 类名，方便在手机端隐藏 -->
-            <a class="btn btn-ghost btn-view-home" href="../">查看首页</a>
+            <!-- 查看首页（移动端自适应为图标） -->
+            <a class="btn btn-ghost btn-view-home" href="../" title="查看首页" aria-label="查看首页">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            </a>
             <button class="btn btn-ghost" id="logoutBtn">退出登录</button>
         </div>
     </header>
