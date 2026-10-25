@@ -9,12 +9,48 @@
 
 ## [Unreleased]
 
+### 新增
+- **在线升级（对接 GitHub Releases API）**：新增独立升级页 `admin/update.php`（后台顶部栏「🔄 检查更新」按钮进入），支持「检查更新 → 环境检测 → 下载更新包 → 应用升级 → 一键回滚」完整闭环
+  - **检查更新**：对接 `https://api.github.com/repos/{OWNER}/{REPO}/releases/latest`，5 分钟本地缓存（`admin/.update/github_release_cache.json`），用 `version_compare` 比较版本号，兼容 `v1.2.0` 与 `1.2.0` 两种 tag 格式
+  - **环境检测**：自动测试 PHP 运行用户能否在项目根目录创建 / 覆盖 / 删除文件，不通过时返回具体原因（PHP 运行用户 vs 文件所有者），并自动降级为「🔗 去 GitHub 下载」按钮
+  - **下载更新包**：从 Release 的 `assets` 数组里找第一个 `.zip`，自动 SHA256 校验（若 Release 提供了 `digest`），解压到 `admin/.update/package/`
+  - **应用升级**：先备份当前代码到 `admin/.update/backup/<时间戳>/`，再逐个覆盖，跳过保留清单中的路径，失败自动回滚
+  - **一键回滚**：用户手动触发，用最近一次备份覆盖当前代码，`state.json` 转为 `rolled_back`
+  - **状态机**：`idle` / `downloading` / `downloaded` / `applying` / `success` / `failed` / `rolled_back`，`state.json` / `history.json` 用 tmp + rename 原子写入，`applying` 超过 10 分钟自动转 `failed`
+  - **并发锁**：`flock(LOCK_EX | LOCK_NB)` 防止两次升级同时进行
+- **新增 5 个后台 API action**：`update_check` / `update_download` / `update_apply` / `update_rollback` / `update_status`（在 `admin/index.php` 中实现）
+- **`admin/defaults.php` 新增升级常量**：`UPDATE_GITHUB_REPO`（默认 `nmrt0316/MochiNav`）/ `UPDATE_DIR` / `UPDATE_MAX_PACKAGE_MB`（200）/ `UPDATE_MAX_EXTRACTED_MB`（200）/ `UPDATE_BACKUP_KEEP`（3）
+- **`admin.css` 新增第 27 章「在线升级页样式」**：`.update-page` / `.update-container` / `.update-card` / `.update-version-*` / `.update-env-*` / `.update-release-*` / `.update-progress-*` / `.update-state-*` / `.update-warning` 等
+- **后台顶部栏「🔄 检查更新」按钮**：链接到 `admin/update.php`
+
 ### 计划中
-- 在线升级（对接 GitHub Releases API，支持一键回滚）
 - 后台数据概览面板
 - 首次登录引导
 - 备份 ZIP 化（含图片与特效）
 - 错误日志查看
+
+### 安全
+- **在线升级**的多层防护：
+  - **路径穿越防护**：拒绝 `..`、绝对路径（`/` 开头）、Windows 盘符（`C:`）
+  - **下载地址白名单**：只认 `github.com` / `raw.githubusercontent.com` / `objects.githubusercontent.com` / `codeload.github.com`
+  - **覆盖白名单**：仅允许覆盖 `admin/`、`assets/`、`index.php`、`404.php`、`announcement.php`、`analytics.php`
+  - **保留清单**：`admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/`、`assets/js/`、`assets/preloaders/`、`README.md`、`LICENSE`、`CHANGELOG.md` **永不覆盖**
+  - **大小限制**：下载 zip 上限 200MB，解压后总大小上限 200MB（防 zip 炸弹）
+  - **后台 JS 隔离**：升级页面的 JS 只调用自己的 5 个 `update_*` API，不直接请求 GitHub
+  - **GitHub API 请求带 User-Agent**：`NuomiNav-Updater/1.0`（GitHub 强制要求）
+
+### 变更
+- `admin/defaults.php` 在文件开头新增升级常量定义区
+- `README.md`「升级须知」章节新增「方式一：在线升级」完整说明，覆盖检查更新 / 环境检测 / 下载 / 应用 / 回滚 / 安全防护 / 常见问题
+- `README.md` 目录结构章节补充 `admin/update.php` 与 `admin/.update/` 目录
+- `README.md` 环境要求章节补充「在线升级需要 PHP `zip` 扩展、能访问 `api.github.com` 和 `github.com`」
+- `README.md` 功能特性章节补充「🔄 在线升级」
+- `README.md` 新增「🔄 在线升级机制」章节，包含 API 一览、状态机、GitHub API 对接、环境检测、安全防护、升级历史
+- `README.md` 常见问题新增 9 条在线升级相关问答
+- `README.md` Nginx 章节补充 `location ~ ^/admin/\.update/` 保护规则
+
+### 修复
+- 无
 
 ---
 
@@ -103,8 +139,8 @@
 
 ## 升级方式
 
-### 方式一：在线升级（计划中）
-待 `1.2.0` 版本实现，届时后台「🔄 系统更新」页支持一键升级 + 回滚。
+### 方式一：在线升级（推荐，v1.2.0 起）
+后台顶部栏点「🔄 检查更新」→ 环境检测通过后即可一键升级，详见 README「升级须知 → 方式一：在线升级」。
 
 ### 方式二：手动覆盖升级（当前推荐）
 1. 下载新版本压缩包
@@ -115,6 +151,7 @@
 |---|---|
 | `admin/data.json` | 卡片、分类、站点配置 |
 | `admin/.admin.conf` | 管理员账号 |
+| `admin/.update/` | 在线升级缓存、更新包、代码备份、升级状态 |
 | `photos/` | 所有上传的图片 |
 | `assets/js/` | 上传的 JS 特效 |
 | `assets/preloaders/` | 上传的加载页主题 |
@@ -131,3 +168,6 @@
 4. 打包，压缩包命名 `nuomi-x.y.z.zip`
 5. 在 GitHub 上打 tag（`vx.y.z`）
 6. 创建 Release，上传 zip，把本段落内容粘贴到 Release 说明里
+   - **注意**：Release 的 zip 必须是**带项目根目录**的压缩包（即解压后有 `index.php`、`admin/` 等顶层文件），不能只打包成一层目录
+   - Release 的 body 字段就是升级页「更新说明」的内容，建议用 Markdown 写清楚本次变更
+   - 如果 Release 提供了 `digest` 字段（格式 `sha256:xxx`），在线升级会自动做 SHA256 校验
