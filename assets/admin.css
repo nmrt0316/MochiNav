@@ -1401,7 +1401,16 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
         min-width: 32px;
     }
     .admin-header-right .btn-view-home {
-        display: none !important; /* 移动端隐藏，节省空间 */
+        display: inline-flex !important;
+        padding: 8px 10px;
+    }
+    /* 缩小三个按钮的间距，防止太挤 */
+    .admin-header-right {
+        gap: 6px !important;
+    }
+    .admin-header-right .btn {
+        padding: 6px 10px;
+        font-size: 13px;
     }
 
     /* 分类栏改为垂直排列 */
