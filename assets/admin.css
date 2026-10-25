@@ -885,8 +885,9 @@ html[data-theme="dark"] .reset-module-item.active .reset-module-label { color: #
 #resetDataModal .modal-box {
     scrollbar-width: none;
     -ms-overflow-style: none;
-    max-height: 90vh;
+    max-height: 85vh;
     overflow-y: auto;
+    margin: auto;
     padding-bottom: 40px;
     padding-bottom: calc(40px + env(safe-area-inset-bottom, 0px));
 }
@@ -908,7 +909,7 @@ html[data-theme="dark"] .reset-module-item.active .reset-module-label { color: #
                 margin-bottom 0.6s ease, 
                 padding 0.6s ease;
 }
-#resetPartialGroup { max-height: 600px; }
+#resetPartialGroup { max-height: 2000px; }
 #resetAllHint { max-height: 280px; }
 #resetFullHint { max-height: 360px; }
 
