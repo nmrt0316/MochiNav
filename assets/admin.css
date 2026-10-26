@@ -145,7 +145,6 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
 .header-title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: .5px; white-space: nowrap; }
 .admin-header-right { display: flex; gap: 8px; align-items: center; }
 
-/* 版本号徽章（带更新入口） */
 .header-version {
     display: inline-flex;
     align-items: center;
@@ -255,7 +254,6 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
 .photo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 10px; }
 .photo-cell { position: relative; border-radius: 10px; overflow: hidden; background: var(--bg-card); aspect-ratio: 1; box-shadow: 0 2px 6px var(--shadow-card); cursor: pointer; }
 
-/* 网格渲染优化：跳过屏幕外元素的布局与绘制 */
 .photo-cell {
     content-visibility: auto;
     contain-intrinsic-size: 0 110px;
@@ -290,7 +288,6 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
 .photo-hint { background: var(--bg-card); border-radius: 12px; padding: 12px 14px; margin-bottom: 12px; font-size: 12.5px; color: var(--text-code); line-height: 1.7; box-shadow: 0 2px 8px var(--shadow-card); }
 .photo-hint code { background: var(--bg-chip); padding: 1px 6px; border-radius: 5px; font-size: 12px; color: var(--text-code); word-break: break-all; }
 
-/* 图片管理空状态 */
 .empty-photo-tip {
     grid-column: 1 / -1;
     padding: 40px 20px;
@@ -551,6 +548,158 @@ html[data-theme="dark"] .sub-tabs .sub-tab-btn.is-active {
 #panel-site .auth-form select { width: 100%; background: var(--bg-input); border: 1px solid var(--border-normal); color: var(--text-main); border-radius: 10px; padding: 10px 36px 10px 12px; font-size: 14px; font-family: inherit; outline: none; cursor: pointer; transition: border-color .3s ease, box-shadow .3s ease, background-color .3s ease, color .3s ease; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%23909399' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; }
 #panel-site .auth-form select:focus { border-color: #667eea; box-shadow: 0 0 0 3px rgba(102, 126, 234, .15); }
 
+.form-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #667eea;
+    padding: 8px 0 10px;
+    margin: 8px 0 12px;
+    border-bottom: 1px dashed rgba(102, 126, 234, 0.35);
+    letter-spacing: 0.3px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.5;
+}
+.form-group-title:first-child {
+    margin-top: 0;
+    padding-top: 2px;
+}
+html[data-theme="dark"] .form-group-title {
+    color: #a5b4fc;
+    border-bottom-color: rgba(165, 180, 252, 0.35);
+}
+
+.footer-locked-info {
+    background: var(--bg-chip);
+    border: 1px solid var(--border-normal);
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin: 4px 0 12px;
+    font-size: 13px;
+    line-height: 1.7;
+}
+.footer-locked-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 2px 0;
+}
+.footer-locked-label {
+    color: var(--text-muted);
+    font-size: 12.5px;
+    min-width: 82px;
+    flex-shrink: 0;
+}
+.footer-locked-row a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.2s ease;
+}
+.footer-locked-row a:hover {
+    color: #4c5bd4;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+html[data-theme="dark"] .footer-locked-row a {
+    color: #a5b4fc;
+}
+html[data-theme="dark"] .footer-locked-row a:hover {
+    color: #c7d2fe;
+}
+.footer-locked-tip {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px dashed var(--border-normal);
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    opacity: 0.9;
+}
+html[data-theme="dark"] .footer-locked-tip {
+    color: var(--text-muted);
+    opacity: 0.85;
+}
+
+#siteForm textarea,
+#panel-site .auth-form textarea {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-normal);
+    color: var(--text-main);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    min-height: 60px;
+    box-sizing: border-box;
+    transition: border-color .22s ease, box-shadow .22s ease, background-color .3s ease, color .3s ease;
+}
+#siteForm textarea:focus,
+#panel-site .auth-form textarea:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+}
+html[data-theme="dark"] #siteForm textarea:focus,
+html[data-theme="dark"] #panel-site .auth-form textarea:focus {
+    box-shadow: 0 0 0 3px rgba(120, 150, 230, .25);
+}
+
+#siteForm select {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-normal);
+    color: var(--text-main);
+    border-radius: 10px;
+    padding: 10px 36px 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%23909399' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    box-sizing: border-box;
+    transition: border-color .22s ease, box-shadow .22s ease, background-color .3s ease, color .3s ease;
+}
+#siteForm select:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+}
+html[data-theme="dark"] #siteForm select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='none' stroke='%239499b3' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round' d='M1 1.5l5 5 5-5'/%3E%3C/svg%3E");
+}
+html[data-theme="dark"] #siteForm select:focus {
+    box-shadow: 0 0 0 3px rgba(120, 150, 230, .25);
+}
+
+#siteForm input[type="password"] {
+    width: 100%;
+    background: var(--bg-input);
+    border: 1px solid var(--border-normal);
+    color: var(--text-main);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: Consolas, Menlo, monospace;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .22s ease, box-shadow .22s ease, background-color .3s ease, color .3s ease;
+}
+#siteForm input[type="password"]:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, .15);
+}
+html[data-theme="dark"] #siteForm input[type="password"]:focus {
+    box-shadow: 0 0 0 3px rgba(120, 150, 230, .25);
+}
+
 /* ==========================================================================
    14. 本地背景兜底面板 (Local Background Fallback)
    ========================================================================== */
@@ -644,7 +793,6 @@ html[data-theme="dark"] .local-bg-toolbar .local-bg-fetch-count:focus {
     font-size: 11px;
 }
 
-/* 本地背景按设备方向分组 */
 .local-bg-group-title {
     grid-column: 1 / -1;
     display: flex;
@@ -667,7 +815,6 @@ html[data-theme="dark"] .local-bg-toolbar .local-bg-fetch-count:focus {
 }
 html[data-theme="dark"] .local-bg-group-title { color: var(--text-muted); }
 
-/* 目标设备选择器 */
 .local-target-switch {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1068,7 +1215,6 @@ html[data-theme="dark"] .init-nav .btn-ghost {
 }
 html[data-theme="dark"] .init-nav .btn-ghost:hover { background: rgba(255, 255, 255, .12); }
 
-/* 预览步骤 */
 .init-summary {
     background: rgba(255, 255, 255, 0.35);
     border: 1px solid rgba(255, 255, 255, 0.55);
@@ -1378,7 +1524,6 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
 @media (max-width: 640px) {
     .admin-app { padding: 14px 10px 40px; } .row-cat { display: none; } 
     
-    /* 恢复单行布局，隐藏不必要的元素，保持简洁 */
     .admin-header {
         padding: 8px 4px 12px;
     }
@@ -1404,7 +1549,6 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
         display: inline-flex !important;
         padding: 8px 10px;
     }
-    /* 缩小三个按钮的间距，防止太挤 */
     .admin-header-right {
         gap: 6px !important;
     }
@@ -1413,7 +1557,6 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
         font-size: 13px;
     }
 
-    /* 分类栏改为垂直排列 */
     .cat-bar {
         flex-direction: column;
         align-items: flex-start;
@@ -1450,7 +1593,6 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
 
     .num-stepper .num-btn { width: 38px; }
 
-    /* 手机端隐藏滚动条（保留滚动能力） */
     html, body {
         scrollbar-width: none;
         -ms-overflow-style: none;
@@ -1467,7 +1609,6 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
         display: none;
     }
 
-    /* 本地背景工具栏紧凑化 */
     .local-bg-priority-row {
         gap: 10px;
     }
@@ -1478,9 +1619,25 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
         width: 64px;
     }
 
-    /* 公告类型按钮移动端 2 列 */
     .announcement-type-switch {
         grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form-group-title {
+        font-size: 13.5px;
+        padding: 6px 0 8px;
+        margin: 6px 0 10px;
+    }
+    .footer-locked-info {
+        padding: 10px 12px;
+        font-size: 12.5px;
+    }
+    .footer-locked-label {
+        min-width: 72px;
+        font-size: 12px;
+    }
+    .footer-locked-tip {
+        font-size: 11.5px;
     }
 }
 
@@ -1709,9 +1866,12 @@ html[data-theme="dark"] .update-release-body {
 }
 .update-action-tip {
     font-size: 12.5px;
-    color: var(--text-muted, #909399);
+    color: #4b5563;
     line-height: 1.6;
     margin-top: 4px;
+}
+html[data-theme="dark"] .update-action-tip {
+    color: #c5c9e2;
 }
 .update-action-empty {
     padding: 12px;
@@ -1778,11 +1938,11 @@ html[data-theme="dark"] .update-state-value.is-loading { color: #79bbff; }
     margin-top: 20px;
     padding: 12px 14px;
     background: rgba(245, 158, 11, 0.08);
-    border: 1px solid rgba(245, 158, 11, 0.30);
+    border: 1px solid rgba(245, 158, 11, 0.32);
     border-radius: 12px;
     font-size: 12.5px;
     line-height: 1.7;
-    color: #92400e;
+    color: #78350f;
 }
 html[data-theme="dark"] .update-warning {
     background: rgba(245, 158, 11, 0.12);
@@ -1796,7 +1956,30 @@ html[data-theme="dark"] .update-warning {
     font-family: Consolas, Menlo, monospace;
     font-size: 11.5px;
     word-break: break-all;
+    color: inherit;
 }
 html[data-theme="dark"] .update-warning code {
     background: rgba(0, 0, 0, 0.25);
+}
+
+.update-tool-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.update-tool-row .btn {
+    flex: 1;
+    min-width: 130px;
+}
+.update-rollback-btn {
+    background: rgba(245, 108, 108, 0.12);
+    color: #dc2626;
+    border: 1px solid rgba(245, 108, 108, 0.40);
+}
+html[data-theme="dark"] .update-rollback-btn {
+    background: rgba(245, 108, 108, 0.18);
+    color: #f87171;
+    border-color: rgba(245, 108, 108, 0.5);
 }
