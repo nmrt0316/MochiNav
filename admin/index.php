@@ -3797,9 +3797,6 @@ if (empty($adminPreloaders)) {
                 <div class="backup-card">
                     <div class="backup-title">⚙️ 基础设置</div>
                     <form id="siteForm" class="auth-form" autocomplete="off">
-
-                        <div class="form-group-title">📌 基础显示</div>
-
                         <label>网站图标 favicon
                             <div class="field-row">
                                 <input type="text" name="favicon" id="siteFaviconInput" value="<?= e($siteCfg['favicon']) ?>" maxlength="300" placeholder="例如 photos/favicon.ico 或 https://...">
