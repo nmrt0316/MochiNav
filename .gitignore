@@ -8,7 +8,7 @@ admin/data.json.tmp.*
 admin/.admin.conf
 admin/*.bak
 
-# 在线升级临时目录（将来启用）
+# 在线升级工作目录（运行时生成，不提交）
 admin/.update/
 
 # ============================================
@@ -20,7 +20,6 @@ photos/*
 !photos/QQ.jpg
 !photos/zy.png
 !photos/lx.png
-!photos/.gitkeep
 
 # 缩略图缓存（自动生成，不提交）
 photos/thumbs/
@@ -28,22 +27,20 @@ photos/kanban_thumbs/
 photos/localbg_thumbs/
 photos/localbanner_thumbs/
 
-# 看板娘（保留内置 7 个）
+# 看板娘（保留内置 8 个）
 photos/kanban/*
 !photos/kanban/妹妹.gif
 !photos/kanban/姐姐.gif
 !photos/kanban/喵小娘.gif
 !photos/kanban/月薪喵.gif
+!photos/kanban/七濑胡桃.gif
 !photos/kanban/舞娘娘.gif
 !photos/kanban/柠檬妹.gif
 !photos/kanban/熊宝宝.gif
-!photos/kanban/.gitkeep
 
 # 本地背景 / Banner（用户上传，不提交）
 photos/localbg/*
-!photos/localbg/.gitkeep
 photos/localbanner/*
-!photos/localbanner/.gitkeep
 
 # ============================================
 # 内置资源（保留，不提交用户上传的）
@@ -56,7 +53,6 @@ assets/js/*
 !assets/js/雪花飘落.js
 !assets/js/烟花波纹.js
 !assets/js/樱花飘落.js
-!assets/js/.gitkeep
 
 # 加载页主题（保留内置 12 个）
 assets/preloaders/*
@@ -72,7 +68,6 @@ assets/preloaders/*
 !assets/preloaders/sakura.css
 !assets/preloaders/starry.css
 !assets/preloaders/vaporwave.css
-!assets/preloaders/.gitkeep
 
 # ============================================
 # 系统与编辑器文件
