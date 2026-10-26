@@ -4106,8 +4106,8 @@ if (empty($adminPreloaders)) {
                     <li><b>前台</b>：标题、头像、favicon、进入后台的连点次数/时间窗口。</li>
                     <li><b>前台</b>：背景与 Banner 的 API、轮播间隔、缓存池上限。</li>
                     <li><b>前台</b>：页脚版权信息（支持 HTML）。</li>
-                    <li><b>前台</b>：GitHub Token（可选，用于提升 API 限额）与更新通道（stable / beta）。</li>
                     <li><b>后台</b>：登录页头像、标题、副标题、标签标题、顶部栏文字。</li>
+                    <li><b>后台</b>：GitHub Token（可选，用于提升 API 限额）与更新通道（stable / beta）。</li>
                 </ul>
             </div>
 
