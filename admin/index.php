@@ -12,6 +12,9 @@
 /* 默认值唯一权威来源（前后台共用） */
 require_once __DIR__ . '/defaults.php';
 
+/* 在线升级模块（独立文件，避免 index.php 臃肿） */
+require_once __DIR__ . '/updater.php';
+
 error_reporting(E_ALL);
 ini_set('display_errors', '0');
 ini_set('log_errors', '1');
@@ -31,16 +34,13 @@ define('ALLOWED_GIF_EXT', ['gif', 'png', 'webp', 'jpg', 'jpeg']);
 define('LOCALBG_DIR',     __DIR__ . '/../photos/localbg');
 define('LOCALBANNER_DIR', __DIR__ . '/../photos/localbanner');
 
-/* 缩略图目录（自动创建，不参与原图管理） */
 define('PHOTO_THUMB_DIR',       __DIR__ . '/../photos/thumbs');
 define('GIRL_THUMB_DIR',        __DIR__ . '/../photos/kanban_thumbs');
 define('LOCALBG_THUMB_DIR',     __DIR__ . '/../photos/localbg_thumbs');
 define('LOCALBANNER_THUMB_DIR', __DIR__ . '/../photos/localbanner_thumbs');
 
-/* 缩略图长边尺寸（像素），保持等比缩放 */
 define('THUMB_MAX_SIZE', 400);
 
-/* 在线升级工作目录（常量 UPDATE_DIR 等定义在 defaults.php） */
 if (!is_dir(UPDATE_DIR)) @mkdir(UPDATE_DIR, 0755, true);
 
 foreach ([
@@ -57,14 +57,7 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 
 /* ==========================================================================
-   2. 核心默认配置
-   --------------------------------------------------------------------------
-   所有默认值统一定义在 admin/defaults.php（前后台共用），
-   这里不再重复定义，避免 "Cannot redeclare" fatal error。
-   ========================================================================== */
-
-/* ==========================================================================
-   3. 通用工具与数据规范化
+   2. 通用工具与数据规范化
    ========================================================================== */
 function respond($ok, $msg = '', $extra = []) {
     ob_end_clean();
@@ -414,7 +407,6 @@ function normalize_data($data) {
         $data['site']['localBannerUaId'] = 'ua_desktop_default';
     }
 
-    /* ---------- 公告 ---------- */
     if (!isset($data['announcements']) || !is_array($data['announcements'])) {
         $data['announcements'] = [];
     }
@@ -452,7 +444,7 @@ function normalize_data($data) {
 }
 
 /* ==========================================================================
-   4. 数据读写与文件处理
+   3. 数据读写与文件处理
    ========================================================================== */
 function load_data() {
     if (!file_exists(DATA_FILE)) {
@@ -538,9 +530,8 @@ function is_login() { return !empty($_SESSION['nuomi_admin_login']); }
 function require_login() { if (!is_login()) respond(false, '未登录或会话已过期，请重新登录'); }
 
 /* ==========================================================================
-   缩略图工具
+   4. 缩略图工具
    ========================================================================== */
-
 function thumb_path_for($originalRelPath) {
     $p = (string)$originalRelPath;
     if ($p === '') return '';
@@ -1110,7 +1101,7 @@ function sync_local_images(&$data, $type, $newFileTargets = []) {
     }
     foreach (array_keys($files) as $f) {
         if (isset($seen[$f])) continue;
-        
+
         $fullPath = __DIR__ . '/../' . $f;
         $tgt = 'both';
         $info = @getimagesize($fullPath);
@@ -1199,668 +1190,6 @@ function compute_local_fp($fullPath) {
 function compute_local_fp_from_string($raw) {
     if (!is_string($raw) || $raw === '') return '';
     return md5($raw);
-}
-
-/* ==========================================================================
-   5.5 在线升级工具函数
-   ========================================================================== */
-function update_ensure_dir() {
-    if (!is_dir(UPDATE_DIR)) {
-        @mkdir(UPDATE_DIR, 0755, true);
-    }
-    return is_dir(UPDATE_DIR);
-}
-
-function update_lock_path() {
-    return UPDATE_DIR . '/update.lock';
-}
-
-function update_acquire_lock() {
-    update_ensure_dir();
-    $lockFile = update_lock_path();
-    $fp = @fopen($lockFile, 'c');
-    if (!$fp) return false;
-    if (!flock($fp, LOCK_EX | LOCK_NB)) {
-        fclose($fp);
-        return false;
-    }
-    return $fp;
-}
-
-function update_release_lock($fp) {
-    if ($fp) {
-        @flock($fp, LOCK_UN);
-        @fclose($fp);
-    }
-}
-
-function update_state_path() {
-    return UPDATE_DIR . '/state.json';
-}
-
-function update_atomic_write_json($filePath, $data) {
-    $dir = dirname($filePath);
-    if (!is_dir($dir)) @mkdir($dir, 0755, true);
-    $json = json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-    if ($json === false) return false;
-    $tmp = $filePath . '.tmp.' . getmypid() . '.' . bin2hex(random_bytes(3));
-    if (@file_put_contents($tmp, $json, LOCK_EX) === false) {
-        @unlink($tmp);
-        return false;
-    }
-    if (!@rename($tmp, $filePath)) {
-        @unlink($tmp);
-        return false;
-    }
-    @chmod($filePath, 0644);
-    return true;
-}
-
-function update_read_state() {
-    $file = update_state_path();
-    $default = [
-        'status' => 'idle',
-        'version' => '',
-        'message' => '',
-        'started' => '',
-        'finished' => '',
-        'backup_dir' => '',
-        'download_url' => '',
-    ];
-    if (!file_exists($file)) return $default;
-    $raw = @file_get_contents($file);
-    $data = json_decode($raw, true);
-    if (!is_array($data)) return $default;
-
-    if (($data['status'] ?? '') === 'applying') {
-        $started = strtotime($data['started'] ?? '');
-        if ($started !== false && (time() - $started) > 600) {
-            $data['status'] = 'failed';
-            $data['message'] = '升级过程超过 10 分钟未完成，已自动标记为失败';
-            $data['finished'] = date('Y-m-d H:i:s');
-            update_atomic_write_json($file, $data);
-        }
-    }
-    return $data;
-}
-
-function update_write_state($state) {
-    return update_atomic_write_json(update_state_path(), $state);
-}
-
-function update_history_path() {
-    return UPDATE_DIR . '/history.json';
-}
-
-function update_read_history() {
-    $file = update_history_path();
-    if (!file_exists($file)) return [];
-    $raw = @file_get_contents($file);
-    $data = json_decode($raw, true);
-    return is_array($data) ? $data : [];
-}
-
-function update_append_history($entry) {
-    $history = update_read_history();
-    array_unshift($history, $entry);
-    if (count($history) > 50) $history = array_slice($history, 0, 50);
-    return update_atomic_write_json(update_history_path(), $history);
-}
-
-function update_env_check() {
-    $result = [
-        'writable' => true,
-        'php_user' => '',
-        'owner' => '',
-        'reason' => '',
-    ];
-
-    if (function_exists('posix_getpwuid') && function_exists('posix_geteuid')) {
-        $info = @posix_getpwuid(posix_geteuid());
-        if (is_array($info) && !empty($info['name'])) {
-            $result['php_user'] = (string)$info['name'];
-        }
-    }
-    if ($result['php_user'] === '') {
-        $result['php_user'] = get_current_user() ?: 'unknown';
-    }
-
-    $rootDir = __DIR__ . '/..';
-    if (function_exists('posix_getpwuid') && function_exists('fileowner')) {
-        $uid = @fileowner($rootDir);
-        if ($uid !== false) {
-            $info = @posix_getpwuid($uid);
-            if (is_array($info) && !empty($info['name'])) {
-                $result['owner'] = (string)$info['name'];
-            }
-        }
-    }
-
-    $testFile = $rootDir . '/.update_write_test_' . bin2hex(random_bytes(4)) . '.tmp';
-    $writeOk = @file_put_contents($testFile, 'test', LOCK_EX);
-    if ($writeOk === false) {
-        $result['writable'] = false;
-        $result['reason'] = 'PHP 运行用户「' . $result['php_user'] . '」无法在项目根目录创建文件。';
-        if ($result['owner'] !== '' && $result['owner'] !== $result['php_user']) {
-            $result['reason'] .= ' 文件所有者是「' . $result['owner'] . '」。建议：把项目目录所有者改为 PHP 运行用户，或设置 775 权限并加入同一用户组；共享主机用户建议直接从 GitHub 下载手动覆盖。';
-        } else {
-            $result['reason'] .= ' 建议：检查项目根目录权限（一般 755，文件 644），或直接把目录所有者改为 PHP 运行用户。';
-        }
-        return $result;
-    }
-    $delOk = @unlink($testFile);
-    if (!$delOk) {
-        $result['writable'] = false;
-        $result['reason'] = 'PHP 运行用户「' . $result['php_user'] . '」能创建文件但无法删除，可能是权限不足。';
-        return $result;
-    }
-
-    $testAdminFile = __DIR__ . '/.update_write_test_' . bin2hex(random_bytes(4)) . '.tmp';
-    $writeAdminOk = @file_put_contents($testAdminFile, 'test', LOCK_EX);
-    if ($writeAdminOk === false) {
-        $result['writable'] = false;
-        $result['reason'] = 'PHP 运行用户「' . $result['php_user'] . '」无法在 admin 目录创建文件。';
-        return $result;
-    }
-    @unlink($testAdminFile);
-
-    return $result;
-}
-
-function update_fetch_release($force = false) {
-    update_ensure_dir();
-    $cacheFile = UPDATE_DIR . '/github_release_cache.json';
-
-    if (!$force && file_exists($cacheFile)) {
-        $mtime = @filemtime($cacheFile);
-        if ($mtime !== false && (time() - $mtime) < 300) {
-            $raw = @file_get_contents($cacheFile);
-            $cached = json_decode($raw, true);
-            if (is_array($cached) && isset($cached['data'])) {
-                return ['ok' => true, 'data' => $cached['data'], 'cached' => true];
-            }
-        }
-    }
-
-    $repo = UPDATE_GITHUB_REPO;
-    $url = 'https://api.github.com/repos/' . $repo . '/releases/latest';
-
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'header' => "User-Agent: NuomiNav-Updater/1.0\r\nAccept: application/vnd.github+json\r\n",
-            'timeout' => 15,
-            'ignore_errors' => true,
-        ],
-        'https' => [
-            'method' => 'GET',
-            'header' => "User-Agent: NuomiNav-Updater/1.0\r\nAccept: application/vnd.github+json\r\n",
-            'timeout' => 15,
-            'ignore_errors' => true,
-        ],
-    ]);
-
-    $raw = @file_get_contents($url, false, $ctx);
-    if ($raw === false) {
-        return ['ok' => false, 'msg' => '无法连接 GitHub API，请检查服务器网络或 allow_url_fopen 设置。'];
-    }
-
-    $json = json_decode($raw, true);
-    if (!is_array($json)) {
-        return ['ok' => false, 'msg' => 'GitHub API 返回格式异常。'];
-    }
-
-    if (isset($json['message'])) {
-        return ['ok' => false, 'msg' => 'GitHub API 错误：' . (string)$json['message']];
-    }
-
-    $tag = (string)($json['tag_name'] ?? '');
-    if ($tag === '') {
-        return ['ok' => false, 'msg' => 'GitHub Release 缺少 tag_name。'];
-    }
-    $version = ltrim($tag, 'vV');
-
-    $downloadUrl = '';
-    $sha256 = '';
-    if (isset($json['assets']) && is_array($json['assets'])) {
-        foreach ($json['assets'] as $asset) {
-            if (!is_array($asset)) continue;
-            $name = (string)($asset['name'] ?? '');
-            $u = (string)($asset['browser_download_url'] ?? '');
-            if ($u === '' || $name === '') continue;
-            if (strtolower(pathinfo($name, PATHINFO_EXTENSION)) === 'zip') {
-                $downloadUrl = $u;
-                if (!empty($asset['digest']) && stripos($asset['digest'], 'sha256:') === 0) {
-                    $sha256 = substr($asset['digest'], 7);
-                }
-                break;
-            }
-        }
-    }
-
-    $data = [
-        'version' => $version,
-        'tag' => $tag,
-        'name' => (string)($json['name'] ?? ''),
-        'body' => (string)($json['body'] ?? ''),
-        'published_at' => (string)($json['published_at'] ?? ''),
-        'html_url' => (string)($json['html_url'] ?? ''),
-        'download_url' => $downloadUrl,
-        'sha256' => $sha256,
-    ];
-
-    update_atomic_write_json($cacheFile, ['ts' => time(), 'data' => $data]);
-    return ['ok' => true, 'data' => $data, 'cached' => false];
-}
-
-function update_validate_download_url($url) {
-    $host = parse_url((string)$url, PHP_URL_HOST);
-    if (!$host) return false;
-    $host = strtolower($host);
-    $whitelist = [
-        'github.com',
-        'raw.githubusercontent.com',
-        'objects.githubusercontent.com',
-        'codeload.github.com',
-    ];
-    foreach ($whitelist as $allowed) {
-        if ($host === $allowed || substr($host, -strlen('.' . $allowed)) === '.' . $allowed) {
-            return true;
-        }
-    }
-    return false;
-}
-
-function update_validate_relative_path($path) {
-    $path = str_replace('\\', '/', (string)$path);
-    if ($path === '') return false;
-    if ($path[0] === '/') return false;
-    if (preg_match('#^[A-Za-z]:#', $path)) return false;
-    if (strpos($path, '..') !== false) return false;
-    foreach (explode('/', $path) as $seg) {
-        if ($seg === '' || $seg === '.') return false;
-    }
-    return true;
-}
-
-function update_is_preserved($relPath) {
-    $rel = ltrim(str_replace('\\', '/', (string)$relPath), '/');
-
-    $preserved = [
-        'admin/data.json',
-        'admin/.admin.conf',
-        'admin/.update',
-    ];
-    foreach ($preserved as $p) {
-        if ($rel === $p) return true;
-        if (strpos($rel, $p . '/') === 0) return true;
-    }
-    $preservedDirs = [
-        'photos',
-        'assets/js',
-        'assets/preloaders',
-    ];
-    foreach ($preservedDirs as $d) {
-        if ($rel === $d) return true;
-        if (strpos($rel, $d . '/') === 0) return true;
-    }
-    $preservedFiles = ['README.md', 'LICENSE', 'CHANGELOG.md'];
-    if (in_array($rel, $preservedFiles, true)) return true;
-
-    return false;
-}
-
-function update_is_allowed_overwrite($relPath) {
-    $rel = ltrim(str_replace('\\', '/', (string)$relPath), '/');
-    if ($rel === '') return false;
-    if (update_is_preserved($rel)) return false;
-
-    if (in_array($rel, ['index.php', '404.php', 'announcement.php', 'analytics.php'], true)) return true;
-
-    if (strpos($rel, 'admin/') === 0) {
-        $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
-        if (in_array($ext, ['php', 'css', 'js', 'md', 'txt', 'html', 'htm'], true)) return true;
-        return false;
-    }
-
-    if (strpos($rel, 'assets/') === 0) {
-        if (strpos($rel, 'assets/js/') === 0) return false;
-        if (strpos($rel, 'assets/preloaders/') === 0) return false;
-        $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
-        if (in_array($ext, ['php', 'css', 'js', 'html', 'htm', 'json', 'txt'], true)) return true;
-        return false;
-    }
-
-    return false;
-}
-
-function update_scan_files($baseDir) {
-    $result = [];
-    if (!is_dir($baseDir)) return $result;
-    $baseDir = rtrim(str_replace('\\', '/', $baseDir), '/');
-    $it = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($baseDir, FilesystemIterator::SKIP_DOTS),
-        RecursiveIteratorIterator::LEAVES_ONLY
-    );
-    foreach ($it as $file) {
-        if ($file->isDir()) continue;
-        $abs = str_replace('\\', '/', $file->getPathname());
-        $rel = ltrim(substr($abs, strlen($baseDir)), '/');
-        $result[] = $rel;
-    }
-    return $result;
-}
-
-function update_backup_current() {
-    update_ensure_dir();
-    $ts = date('Ymd_His');
-    $backupDir = UPDATE_DIR . '/backup/' . $ts;
-    if (!is_dir($backupDir)) @mkdir($backupDir, 0755, true);
-
-    $rootDir = realpath(__DIR__ . '/..');
-    if ($rootDir === false) return ['ok' => false, 'msg' => '无法定位项目根目录'];
-    $rootDir = str_replace('\\', '/', $rootDir);
-
-    $files = update_scan_files($rootDir);
-    $copied = 0;
-    foreach ($files as $rel) {
-        if (!update_is_allowed_overwrite($rel)) continue;
-        $src = $rootDir . '/' . $rel;
-        $dst = $backupDir . '/' . $rel;
-        $dstDir = dirname($dst);
-        if (!is_dir($dstDir)) @mkdir($dstDir, 0755, true);
-        if (@copy($src, $dst)) $copied++;
-    }
-
-    return ['ok' => true, 'dir' => $backupDir, 'count' => $copied];
-}
-
-function update_rmdir_recursive($dir) {
-    if (!is_dir($dir)) return;
-    $items = @scandir($dir);
-    if ($items === false) return;
-    foreach ($items as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $full = $dir . '/' . $f;
-        if (is_dir($full)) update_rmdir_recursive($full);
-        else @unlink($full);
-    }
-    @rmdir($dir);
-}
-
-function update_cleanup_old_backups() {
-    $baseDir = UPDATE_DIR . '/backup';
-    if (!is_dir($baseDir)) return;
-    $items = @scandir($baseDir);
-    if ($items === false) return;
-    $dirs = [];
-    foreach ($items as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $full = $baseDir . '/' . $f;
-        if (is_dir($full)) $dirs[] = $full;
-    }
-    usort($dirs, function ($a, $b) { return strcmp($b, $a); });
-    $keep = max(1, (int)UPDATE_BACKUP_KEEP);
-    for ($i = $keep; $i < count($dirs); $i++) {
-        update_rmdir_recursive($dirs[$i]);
-    }
-}
-
-function update_get_latest_backup() {
-    $baseDir = UPDATE_DIR . '/backup';
-    if (!is_dir($baseDir)) return null;
-    $items = @scandir($baseDir);
-    if ($items === false) return null;
-    $dirs = [];
-    foreach ($items as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $full = $baseDir . '/' . $f;
-        if (is_dir($full)) $dirs[] = $full;
-    }
-    if (count($dirs) === 0) return null;
-    usort($dirs, function ($a, $b) { return strcmp($b, $a); });
-    return $dirs[0];
-}
-
-function update_download_package($url, $sha256 = '') {
-    update_ensure_dir();
-    if (!update_validate_download_url($url)) {
-        return ['ok' => false, 'msg' => '下载地址不在白名单内'];
-    }
-    if (!class_exists('ZipArchive')) {
-        return ['ok' => false, 'msg' => '服务器未安装 PHP zip 扩展，无法解压更新包'];
-    }
-
-    $packageFile = UPDATE_DIR . '/package.zip';
-    $maxBytes = (int)UPDATE_MAX_PACKAGE_MB * 1024 * 1024;
-
-    $ctx = stream_context_create([
-        'http' => [
-            'method' => 'GET',
-            'header' => "User-Agent: NuomiNav-Updater/1.0\r\nAccept: application/octet-stream\r\n",
-            'timeout' => 120,
-            'follow_location' => 1,
-            'max_redirects' => 5,
-        ],
-        'https' => [
-            'method' => 'GET',
-            'header' => "User-Agent: NuomiNav-Updater/1.0\r\nAccept: application/octet-stream\r\n",
-            'timeout' => 120,
-            'follow_location' => 1,
-            'max_redirects' => 5,
-        ],
-    ]);
-
-    $fp = @fopen($url, 'rb', false, $ctx);
-    if (!$fp) {
-        return ['ok' => false, 'msg' => '无法打开下载链接'];
-    }
-
-    $out = @fopen($packageFile, 'wb');
-    if (!$out) {
-        @fclose($fp);
-        return ['ok' => false, 'msg' => '无法写入更新包文件，请检查 admin/.update 目录权限'];
-    }
-
-    $total = 0;
-    $ok = true;
-    while (!feof($fp)) {
-        $chunk = @fread($fp, 65536);
-        if ($chunk === false) { $ok = false; break; }
-        $total += strlen($chunk);
-        if ($total > $maxBytes) { $ok = false; break; }
-        if (@fwrite($out, $chunk) === false) { $ok = false; break; }
-    }
-    @fclose($fp);
-    @fclose($out);
-
-    if (!$ok) {
-        @unlink($packageFile);
-        return ['ok' => false, 'msg' => '下载失败或超过 ' . UPDATE_MAX_PACKAGE_MB . 'MB 上限'];
-    }
-
-    if ($sha256 !== '') {
-        $actual = @hash_file('sha256', $packageFile);
-        if ($actual === false || strcasecmp($actual, $sha256) !== 0) {
-            @unlink($packageFile);
-            return ['ok' => false, 'msg' => 'SHA256 校验失败'];
-        }
-    }
-
-    return ['ok' => true, 'file' => $packageFile, 'size' => $total];
-}
-
-function update_extract_package($packageFile) {
-    if (!is_file($packageFile)) {
-        return ['ok' => false, 'msg' => '更新包文件不存在'];
-    }
-    if (!class_exists('ZipArchive')) {
-        return ['ok' => false, 'msg' => '服务器未安装 PHP zip 扩展'];
-    }
-
-    $extractDir = UPDATE_DIR . '/package';
-    if (is_dir($extractDir)) update_rmdir_recursive($extractDir);
-    @mkdir($extractDir, 0755, true);
-
-    $zip = new ZipArchive();
-    if ($zip->open($packageFile) !== true) {
-        return ['ok' => false, 'msg' => '无法打开 ZIP 文件'];
-    }
-
-    $maxTotal = (int)UPDATE_MAX_EXTRACTED_MB * 1024 * 1024;
-    $totalBytes = 0;
-    $extractedCount = 0;
-    $ok = true;
-    $msg = '';
-
-    for ($i = 0; $i < $zip->numFiles; $i++) {
-        $entry = $zip->statIndex($i);
-        if ($entry === false) continue;
-        $name = (string)$entry['name'];
-        $size = (int)$entry['size'];
-
-        $norm = str_replace('\\', '/', $name);
-        if ($norm === '' || $norm === '/') continue;
-        if ($norm[0] === '/') { $ok = false; $msg = '非法绝对路径：' . $name; break; }
-        if (preg_match('#^[A-Za-z]:#', $norm)) { $ok = false; $msg = '非法 Windows 盘符路径：' . $name; break; }
-        if (strpos($norm, '..') !== false) { $ok = false; $msg = '非法路径穿越：' . $name; break; }
-        if (substr($norm, -1) === '/') continue;
-
-        $totalBytes += $size;
-        if ($totalBytes > $maxTotal) {
-            $ok = false;
-            $msg = '解压后总大小超过 ' . UPDATE_MAX_EXTRACTED_MB . 'MB 上限';
-            break;
-        }
-
-        $target = $extractDir . '/' . $norm;
-        $targetDir = dirname($target);
-        if (!is_dir($targetDir)) @mkdir($targetDir, 0755, true);
-
-        $contents = $zip->getFromIndex($i);
-        if ($contents === false) continue;
-        if (@file_put_contents($target, $contents) === false) {
-            $ok = false;
-            $msg = '写入文件失败：' . $name;
-            break;
-        }
-        $extractedCount++;
-    }
-
-    $zip->close();
-
-    if (!$ok) {
-        update_rmdir_recursive($extractDir);
-        return ['ok' => false, 'msg' => $msg];
-    }
-
-    return ['ok' => true, 'dir' => $extractDir, 'count' => $extractedCount];
-}
-
-function update_find_package_root($extractDir) {
-    $items = @scandir($extractDir);
-    if ($items === false) return $extractDir;
-    $dirs = [];
-    $files = [];
-    foreach ($items as $f) {
-        if ($f === '.' || $f === '..') continue;
-        $full = $extractDir . '/' . $f;
-        if (is_dir($full)) $dirs[] = $full;
-        else $files[] = $full;
-    }
-    if (count($dirs) === 1 && count($files) === 0) {
-        if (is_file($dirs[0] . '/index.php')) {
-            return $dirs[0];
-        }
-    }
-    return $extractDir;
-}
-
-function update_restore_from_backup($backupDir) {
-    if (!is_dir($backupDir)) return false;
-    $rootDir = realpath(__DIR__ . '/..');
-    if ($rootDir === false) return false;
-    $rootDir = str_replace('\\', '/', $rootDir);
-
-    $files = update_scan_files($backupDir);
-    foreach ($files as $rel) {
-        $rel = ltrim(str_replace('\\', '/', $rel), '/');
-        if ($rel === '') continue;
-        $src = $backupDir . '/' . $rel;
-        $dst = $rootDir . '/' . $rel;
-        $dstDir = dirname($dst);
-        if (!is_dir($dstDir)) @mkdir($dstDir, 0755, true);
-        @copy($src, $dst);
-        @chmod($dst, 0644);
-    }
-    return true;
-}
-
-function update_apply_package() {
-    $extractDir = UPDATE_DIR . '/package';
-    if (!is_dir($extractDir)) {
-        return ['ok' => false, 'msg' => '更新包尚未解压，请先下载'];
-    }
-
-    $packageRoot = update_find_package_root($extractDir);
-
-    $rootDir = realpath(__DIR__ . '/..');
-    if ($rootDir === false) {
-        return ['ok' => false, 'msg' => '无法定位项目根目录'];
-    }
-    $rootDir = str_replace('\\', '/', $rootDir);
-
-    $backup = update_backup_current();
-    if (!$backup['ok']) {
-        return ['ok' => false, 'msg' => '备份失败：' . ($backup['msg'] ?? '未知错误')];
-    }
-    $backupDir = $backup['dir'];
-
-    $files = update_scan_files($packageRoot);
-    $toApply = [];
-    $preserved = 0;
-    $skipped = 0;
-    foreach ($files as $rel) {
-        $rel = ltrim(str_replace('\\', '/', $rel), '/');
-        if ($rel === '') continue;
-        if (update_is_preserved($rel)) { $preserved++; continue; }
-        if (!update_is_allowed_overwrite($rel)) { $skipped++; continue; }
-        $toApply[] = $rel;
-    }
-
-    if (count($toApply) === 0) {
-        return ['ok' => false, 'msg' => '更新包中没有可覆盖的文件（可能版本包结构异常）'];
-    }
-
-    $applied = [];
-    $failed = null;
-    foreach ($toApply as $rel) {
-        $src = $packageRoot . '/' . $rel;
-        $dst = $rootDir . '/' . $rel;
-        $dstDir = dirname($dst);
-        if (!is_dir($dstDir)) @mkdir($dstDir, 0755, true);
-        if (!@copy($src, $dst)) {
-            $failed = '覆盖失败：' . $rel;
-            break;
-        }
-        @chmod($dst, 0644);
-        $applied[] = $rel;
-    }
-
-    if ($failed !== null) {
-        update_restore_from_backup($backupDir);
-        return ['ok' => false, 'msg' => $failed . '，已自动回滚'];
-    }
-
-    update_cleanup_old_backups();
-
-    return [
-        'ok' => true,
-        'applied' => count($applied),
-        'preserved' => $preserved,
-        'skipped' => $skipped,
-        'backup_dir' => $backupDir,
-    ];
 }
 
 /* ==========================================================================
@@ -2549,19 +1878,19 @@ if ($action !== '') {
             require_login();
             $type = (($_POST['type'] ?? 'bg') === 'banner') ? 'banner' : 'bg';
             $key  = ($type === 'bg') ? 'localBg' : 'localBanner';
-            
+
             $data = load_data();
             if (!isset($data[$key]['images']) || !is_array($data[$key]['images']) || count($data[$key]['images']) === 0) {
                 respond(false, '当前没有本地图片，无法自动分类');
             }
-            
+
             $stats = ['desktop' => 0, 'mobile' => 0, 'both' => 0, 'failed' => 0, 'total' => 0];
             foreach ($data[$key]['images'] as $k => $item) {
                 if (empty($item['file'])) { $stats['failed']++; continue; }
                 $stats['total']++;
                 $fullPath = __DIR__ . '/../' . $item['file'];
                 if (!is_file($fullPath)) { $stats['failed']++; continue; }
-                
+
                 $info = @getimagesize($fullPath);
                 if ($info !== false && $info[0] > 0 && $info[1] > 0) {
                     if ($info[0] > $info[1] * 1.1) $data[$key]['images'][$k]['target'] = 'desktop';
@@ -2573,25 +1902,25 @@ if ($action !== '') {
                 }
             }
             save_data($data);
-            
+
             $success = $stats['desktop'] + $stats['mobile'] + $stats['both'];
             $parts = [];
             if ($stats['mobile'] > 0)  $parts[] = '📱 移动端（竖屏）' . $stats['mobile'] . ' 张';
             if ($stats['desktop'] > 0) $parts[] = '🖥 桌面端（横屏）' . $stats['desktop'] . ' 张';
             if ($stats['both'] > 0)    $parts[] = '🌐 通用' . $stats['both'] . ' 张';
             $detail = count($parts) > 0 ? '：' . implode('、', $parts) : '';
-            
+
             if ($success === 0) {
                 respond(false, '自动分类失败：未能识别任何图片' . ($stats['failed'] > 0 ? '（' . $stats['failed'] . ' 张图片无法读取）' : ''), [
                     'stats' => $stats
                 ]);
             }
-            
+
             $msg = '自动分类完成' . $detail;
             if ($stats['failed'] > 0) {
                 $msg .= '，另有 ' . $stats['failed'] . ' 张读取失败';
             }
-            
+
             respond(true, $msg, [
                 'images' => decorate_images($data[$key]['images']),
                 'stats'  => $stats
@@ -2634,7 +1963,7 @@ if ($action !== '') {
             }
 
             $relNew = $relPrefix . $newname;
-            
+
             $info = @getimagesize($dest);
             $target = 'both';
             if ($info !== false && $info[0] > 0 && $info[1] > 0) {
@@ -2690,33 +2019,33 @@ if ($action !== '') {
             $file = trim((string)($_POST['file'] ?? ''));
             $newName = trim((string)($_POST['name'] ?? ''));
             $newTarget = trim((string)($_POST['target'] ?? ''));
-            
+
             if ($file === '') respond(false, '缺少文件路径');
             if ($newName === '') respond(false, '名称不能为空');
             if (preg_match('#[\\\\/:*?"<>|]#', $newName)) respond(false, '名称不能包含 \\ / : * ? " < > | 等字符');
             if (substr($newName, 0, 1) === '.') respond(false, '名称不能以点开头');
             if (mb_strlen($newName) > 60) respond(false, '名称过长（最多 60 字）');
-            
+
             $dir       = ($type === 'bg') ? LOCALBG_DIR : LOCALBANNER_DIR;
             $relPrefix = ($type === 'bg') ? 'photos/localbg/' : 'photos/localbanner/';
             $key       = ($type === 'bg') ? 'localBg' : 'localBanner';
             if (strpos($file, $relPrefix) !== 0 || strpos($file, '..') !== false) respond(false, '非法路径');
-            
+
             $base = realpath($dir); $oldReal = realpath(__DIR__ . '/../' . $file);
             if ($base === false || $oldReal === false || !is_file($oldReal)) respond(false, '文件不存在');
             if (strpos($oldReal, $base . DIRECTORY_SEPARATOR) !== 0) respond(false, '非法路径');
-            
+
             $newName = sanitize_filename($newName, 'local');
             $ext = pathinfo($oldReal, PATHINFO_EXTENSION);
             $newFile = $newName . '.' . $ext;
             $newFull = $dir . '/' . $newFile;
             $newRel  = $relPrefix . $newFile;
-            
+
             if ($newRel !== $file) {
                 if (file_exists($newFull)) respond(false, '目标文件名已存在');
                 if (!rename_with_thumb($oldReal, $newFull, $file, $newRel)) respond(false, '重命名失败，请检查权限');
             }
-            
+
             $data = load_data();
             if (!isset($data[$key]['images']) || !is_array($data[$key]['images'])) $data[$key]['images'] = [];
             $found = false;
@@ -2724,7 +2053,7 @@ if ($action !== '') {
                 if (($item['file'] ?? '') === $file) {
                     $data[$key]['images'][$k]['file'] = $newRel;
                     $data[$key]['images'][$k]['name'] = $newName;
-                    
+
                     if ($newTarget === 'auto') {
                         $info = @getimagesize($oldReal);
                         if ($info !== false && $info[0] > 0 && $info[1] > 0) {
@@ -2737,7 +2066,7 @@ if ($action !== '') {
                     } elseif (in_array($newTarget, ['desktop', 'mobile', 'both'], true)) {
                         $data[$key]['images'][$k]['target'] = $newTarget;
                     }
-                    
+
                     $found = true; break;
                 }
             }
@@ -3110,9 +2439,16 @@ if ($action !== '') {
                 'localBgPriority','localBannerPriority',
                 'copyright','githubUrl',
                 'poweredBy','poweredByUrl',
+                'githubToken',
             ];
             foreach ($fields as $f) {
                 if (array_key_exists($f, $_POST)) $data['site'][$f] = trim((string)$_POST[$f]);
+            }
+
+            if (array_key_exists('updateChannel', $_POST)) {
+                $ch = strtolower(trim((string)$_POST['updateChannel']));
+                if (!in_array($ch, ['stable', 'beta'], true)) $ch = 'stable';
+                $data['site']['updateChannel'] = $ch;
             }
 
             foreach (['localBgPriority', 'localBannerPriority'] as $pk) {
@@ -3459,228 +2795,15 @@ if ($action !== '') {
             break;
 
         /* ============================================================
-           在线升级
+           在线升级（逻辑在 admin/updater.php）
            ============================================================ */
         case 'update_check':
-            require_login();
-            $env = update_env_check();
-            $release = update_fetch_release(!empty($_POST['force']));
-            if (!$release['ok']) {
-                respond(false, $release['msg'], ['env' => $env]);
-            }
-            $data = $release['data'];
-            $latestVersion = ltrim((string)$data['version'], 'vV');
-            $hasUpdate = version_compare($latestVersion, NUOMI_VERSION, '>');
-            respond(true, '检查完成', [
-                'current_version' => NUOMI_VERSION,
-                'latest_version' => $latestVersion,
-                'has_update' => $hasUpdate,
-                'release_url' => $data['html_url'] ?? '',
-                'release_body' => $data['body'] ?? '',
-                'release_published' => $data['published_at'] ?? '',
-                'download_url' => $data['download_url'] ?? '',
-                'sha256' => $data['sha256'] ?? '',
-                'env' => $env,
-                'cached' => !empty($release['cached']),
-            ]);
-            break;
-
         case 'update_download':
-            require_login();
-            $lock = update_acquire_lock();
-            if ($lock === false) respond(false, '已有升级进程正在进行，请稍后再试');
-            try {
-                $env = update_env_check();
-                if (!$env['writable']) {
-                    respond(false, '环境不支持在线升级：' . $env['reason'], ['env' => $env]);
-                }
-
-                $release = update_fetch_release(false);
-                if (!$release['ok']) {
-                    respond(false, $release['msg']);
-                }
-                $data = $release['data'];
-                $latestVersion = ltrim((string)$data['version'], 'vV');
-                if (!version_compare($latestVersion, NUOMI_VERSION, '>')) {
-                    respond(false, '当前已是最新版本 v' . NUOMI_VERSION);
-                }
-                $downloadUrl = (string)($data['download_url'] ?? '');
-                if ($downloadUrl === '') respond(false, '更新包下载地址为空');
-
-                update_write_state([
-                    'status' => 'downloading',
-                    'version' => $latestVersion,
-                    'message' => '正在下载更新包…',
-                    'started' => date('Y-m-d H:i:s'),
-                    'finished' => '',
-                    'backup_dir' => '',
-                    'download_url' => $downloadUrl,
-                ]);
-
-                $dl = update_download_package($downloadUrl, (string)($data['sha256'] ?? ''));
-                if (!$dl['ok']) {
-                    update_write_state([
-                        'status' => 'failed',
-                        'version' => $latestVersion,
-                        'message' => '下载失败：' . $dl['msg'],
-                        'started' => date('Y-m-d H:i:s'),
-                        'finished' => date('Y-m-d H:i:s'),
-                        'backup_dir' => '',
-                        'download_url' => $downloadUrl,
-                    ]);
-                    respond(false, '下载失败：' . $dl['msg']);
-                }
-
-                $extract = update_extract_package($dl['file']);
-                if (!$extract['ok']) {
-                    update_write_state([
-                        'status' => 'failed',
-                        'version' => $latestVersion,
-                        'message' => '解压失败：' . $extract['msg'],
-                        'started' => date('Y-m-d H:i:s'),
-                        'finished' => date('Y-m-d H:i:s'),
-                        'backup_dir' => '',
-                        'download_url' => $downloadUrl,
-                    ]);
-                    respond(false, '解压失败：' . $extract['msg']);
-                }
-
-                update_write_state([
-                    'status' => 'downloaded',
-                    'version' => $latestVersion,
-                    'message' => '更新包已下载并解压，可以应用升级',
-                    'started' => date('Y-m-d H:i:s'),
-                    'finished' => date('Y-m-d H:i:s'),
-                    'backup_dir' => '',
-                    'download_url' => $downloadUrl,
-                ]);
-
-                respond(true, '下载完成，可以应用升级', [
-                    'version' => $latestVersion,
-                    'size' => $dl['size'],
-                    'count' => $extract['count'],
-                ]);
-            } finally {
-                update_release_lock($lock);
-            }
-            break;
-
         case 'update_apply':
-            require_login();
-            $lock = update_acquire_lock();
-            if ($lock === false) respond(false, '已有升级进程正在进行，请稍后再试');
-            try {
-                $state = update_read_state();
-                if (($state['status'] ?? '') !== 'downloaded') {
-                    respond(false, '当前状态不允许应用升级（需要先下载）');
-                }
-
-                $extractDir = UPDATE_DIR . '/package';
-                if (!is_dir($extractDir)) {
-                    respond(false, '更新包已丢失，请重新下载');
-                }
-
-                update_write_state([
-                    'status' => 'applying',
-                    'version' => $state['version'] ?? '',
-                    'message' => '正在应用升级…',
-                    'started' => $state['started'] ?? date('Y-m-d H:i:s'),
-                    'finished' => '',
-                    'backup_dir' => '',
-                    'download_url' => $state['download_url'] ?? '',
-                ]);
-
-                $apply = update_apply_package();
-                if (!$apply['ok']) {
-                    update_write_state([
-                        'status' => 'failed',
-                        'version' => $state['version'] ?? '',
-                        'message' => $apply['msg'],
-                        'started' => $state['started'] ?? '',
-                        'finished' => date('Y-m-d H:i:s'),
-                        'backup_dir' => '',
-                        'download_url' => $state['download_url'] ?? '',
-                    ]);
-                    respond(false, $apply['msg']);
-                }
-
-                update_write_state([
-                    'status' => 'success',
-                    'version' => $state['version'] ?? '',
-                    'message' => '升级成功，已应用 ' . $apply['applied'] . ' 个文件',
-                    'started' => $state['started'] ?? '',
-                    'finished' => date('Y-m-d H:i:s'),
-                    'backup_dir' => $apply['backup_dir'] ?? '',
-                    'download_url' => $state['download_url'] ?? '',
-                ]);
-
-                update_append_history([
-                    'time' => date('Y-m-d H:i:s'),
-                    'from_version' => NUOMI_VERSION,
-                    'to_version' => $state['version'] ?? '',
-                    'status' => 'success',
-                    'applied' => $apply['applied'],
-                    'backup_dir' => $apply['backup_dir'] ?? '',
-                ]);
-
-                respond(true, '升级成功', [
-                    'version' => $state['version'] ?? '',
-                    'applied' => $apply['applied'],
-                    'backup_dir' => $apply['backup_dir'] ?? '',
-                ]);
-            } finally {
-                update_release_lock($lock);
-            }
-            break;
-
         case 'update_rollback':
-            require_login();
-            $lock = update_acquire_lock();
-            if ($lock === false) respond(false, '已有升级进程正在进行，请稍后再试');
-            try {
-                $latest = update_get_latest_backup();
-                if ($latest === null) {
-                    respond(false, '没有可用的备份');
-                }
-                $ok = update_restore_from_backup($latest);
-                if (!$ok) {
-                    respond(false, '回滚失败');
-                }
-
-                $state = update_read_state();
-                update_write_state([
-                    'status' => 'rolled_back',
-                    'version' => $state['version'] ?? '',
-                    'message' => '已回滚到备份：' . basename($latest),
-                    'started' => $state['started'] ?? '',
-                    'finished' => date('Y-m-d H:i:s'),
-                    'backup_dir' => $latest,
-                    'download_url' => $state['download_url'] ?? '',
-                ]);
-
-                update_append_history([
-                    'time' => date('Y-m-d H:i:s'),
-                    'from_version' => NUOMI_VERSION,
-                    'to_version' => '',
-                    'status' => 'rolled_back',
-                    'backup_dir' => $latest,
-                ]);
-
-                respond(true, '回滚成功', ['backup_dir' => $latest]);
-            } finally {
-                update_release_lock($lock);
-            }
-            break;
-
         case 'update_status':
             require_login();
-            $state = update_read_state();
-            $latestBackup = update_get_latest_backup();
-            respond(true, '', [
-                'state' => $state,
-                'can_rollback' => $latestBackup !== null,
-                'current_version' => NUOMI_VERSION,
-            ]);
+            updater_handle_action($action);
             break;
 
         default:
@@ -3968,7 +3091,7 @@ if (empty($adminPreloaders)) {
                             <span class="init-summary-value" id="sumClick">—</span>
                         </div>
                     </div>
-                    <p class="init-summary-hint">📋 已预置 2 个默认分类（<b>导航 / 联系</b>）与 2 个加载页主题（优雅 / 苹果），可在后台随时修改或删除。</p>
+                    <p class="init-summary-hint">📋 已预置 2 个默认分类（<b>导航 / 联系</b>）与 1 个加载页主题（柔光），可在后台随时修改或删除。</p>
                 </div>
             </div>
 
@@ -4035,9 +3158,8 @@ if (empty($adminPreloaders)) {
     <header class="admin-header">
         <div class="admin-header-left">
             <span class="header-title"><?= e($siteCfg['adminHeaderTitle']) ?></span>
-            <!-- 把版本号变成可点击的更新入口，保留原来的胶囊样式，并加入小图标提示 -->
             <a class="header-version" href="update.php" title="点击检查在线更新">
-                v<?= NUOMI_VERSION ?> 
+                v<?= NUOMI_VERSION ?>
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px;opacity:0.8"><path d="M21 2v6h-6M3 12a9 9 0 1 0 2.6-6.4L21 8"/></svg>
             </a>
         </div>
@@ -4045,7 +3167,6 @@ if (empty($adminPreloaders)) {
             <button class="btn btn-ghost theme-toggle-btn" id="themeToggleBtn" title="切换主题" aria-label="切换主题">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/></svg>
             </button>
-            <!-- 查看首页（移动端自适应为图标） -->
             <a class="btn btn-ghost btn-view-home" href="../" title="查看首页" aria-label="查看首页">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
             </a>
@@ -4407,7 +3528,7 @@ if (empty($adminPreloaders)) {
         <div class="effect-hint">
             <p>📌 上传 <code>.css</code> 文件到 <code>assets/preloaders/</code>，刷新本页面即可自动识别。</p>
             <p style="margin-top:6px">💡 CSS 文件顶部可写两行注释作为名称和描述，例如：<br>
-            <code>/* @name 优雅 */</code><br>
+            <code>/* @name 柔光 */</code><br>
             <code>/* @description 紫罗兰柔光 + 涟漪 */</code></p>
             <p style="margin-top:6px"><b>拖动排序后，排在首位的主题将自动成为默认主题。</b></p>
         </div>
@@ -4676,6 +3797,9 @@ if (empty($adminPreloaders)) {
                 <div class="backup-card">
                     <div class="backup-title">⚙️ 基础设置</div>
                     <form id="siteForm" class="auth-form" autocomplete="off">
+
+                        <div class="form-group-title">📌 基础显示</div>
+
                         <label>网站图标 favicon
                             <div class="field-row">
                                 <input type="text" name="favicon" id="siteFaviconInput" value="<?= e($siteCfg['favicon']) ?>" maxlength="300" placeholder="例如 photos/favicon.ico 或 https://...">
@@ -4703,6 +3827,9 @@ if (empty($adminPreloaders)) {
                                 <img id="siteAvatarPreviewImg" src="" alt="头像预览">
                             </div>
                         </label>
+
+                        <div class="form-group-title">🔐 后台安全入口</div>
+
                         <label>进入后台：头像连点次数
                             <input type="number" name="adminClickCount" value="<?= e($siteCfg['adminClickCount']) ?>" min="3" max="30" step="1" placeholder="默认 10，范围 3~30">
                             <span class="small muted">在时间窗口内连续点击头像达到该次数即进入后台，默认 10 次。</span>
@@ -4711,33 +3838,40 @@ if (empty($adminPreloaders)) {
                             <input type="number" name="adminClickWindow" value="<?= e($siteCfg['adminClickWindow']) ?>" min="1" max="60" step="0.5" placeholder="默认 10，范围 1~60">
                             <span class="small muted">只统计该时间窗口内的点击，超时自动清零，默认 10 秒。</span>
                         </label>
-                        <label>页脚版权信息
-                            <input type="text" name="copyright" value="<?= e($siteCfg['copyright'] ?? '') ?>" maxlength="120" placeholder="例如 © 2026 糯米の引导页">
-                            <span class="small muted">显示在页面底部居中位置。留空则不显示。</span>
+
+                        <div class="form-group-title">🔗 页脚信息</div>
+
+                        <label>页脚版权信息（支持 HTML）
+                            <textarea name="copyright" rows="2" maxlength="500" placeholder="例如 © 2026 我的导航页 或 &lt;a href=&quot;https://beian.miit.gov.cn&quot; target=&quot;_blank&quot;&gt;京ICP备xxx号&lt;/a&gt;"><?= e($siteCfg['copyright'] ?? '') ?></textarea>
+                            <span class="small muted">显示在页面底部第一行。支持 HTML 标签，可放备案号链接等。</span>
                         </label>
-                        <label>页脚 GitHub 链接
-                            <input type="text" name="githubUrl" value="<?= e($siteCfg['githubUrl'] ?? '') ?>" maxlength="300" placeholder="例如 https://github.com/你的用户名/你的仓库名">
-                            <span class="small muted">留空则不显示 GitHub 链接。必须以 http:// 或 https:// 开头。</span>
-                        </label>
-                        <div class="footer-switch-row">
-                            <div class="footer-switch-text">
-                                <div class="footer-switch-title">显示 GitHub 链接</div>
-                                <div class="small muted">关闭后页脚第二行只显示 Powered by，不显示 GitHub 链接（保留地址）</div>
+
+                        <div class="footer-locked-info">
+                            <div class="footer-locked-row">
+                                <span class="footer-locked-label">Powered by</span>
+                                <a href="https://github.com/nmrt0316/MochiNav" target="_blank" rel="noopener noreferrer">糯米の引导页</a>
                             </div>
-                            <input type="hidden" name="githubEnabled" value="0">
-                            <label class="switch-mini" style="flex-shrink:0;">
-                                <input type="checkbox" name="githubEnabled" value="1" <?= (($siteCfg['githubEnabled'] ?? '1') === '1') ? 'checked' : '' ?>>
-                                <span class="slider-mini"></span>
-                            </label>
+                            <div class="footer-locked-row">
+                                <span class="footer-locked-label">GitHub</span>
+                                <a href="https://github.com/nmrt0316" target="_blank" rel="noopener noreferrer">nmrt0316</a>
+                            </div>
+                            <p class="footer-locked-tip">🔒 开发者和项目链接已锁定，防止二次开发时误改项目归属。如需二次开发，请 fork 后自行修改源码。</p>
                         </div>
-                        <label>页脚：Powered by 项目名
-                            <input type="text" name="poweredBy" value="<?= e($siteCfg['poweredBy'] ?? '') ?>" maxlength="60" placeholder="例如 糯米の引导页">
-                            <span class="small muted">显示在页脚第二行，前面自动加「Powered by 」。留空则不显示该行。</span>
+
+                        <div class="form-group-title">🚀 在线升级专属</div>
+
+                        <label>GitHub Token（可选）
+                            <input type="password" name="githubToken" value="<?= e($siteCfg['githubToken'] ?? '') ?>" maxlength="200" placeholder="ghp_xxxxxxxxxxxx（留空则匿名访问）" autocomplete="new-password">
+                            <span class="small muted">填写后可将 GitHub API 速率上限从 60 次/小时提升到 5000 次/小时，并支持访问私有仓库的 Release。留空则走匿名访问。</span>
                         </label>
-                        <label>页脚：Powered by 链接
-                            <input type="text" name="poweredByUrl" value="<?= e($siteCfg['poweredByUrl'] ?? '') ?>" maxlength="300" placeholder="例如 https://github.com/你的用户名/你的仓库名">
-                            <span class="small muted">留空则 Powered by 只显示为纯文本，不可点击。</span>
+                        <label>更新通道
+                            <select name="updateChannel">
+                                <option value="stable" <?= (($siteCfg['updateChannel'] ?? 'stable') === 'stable') ? 'selected' : '' ?>>stable · 正式版（仅取 /releases/latest）</option>
+                                <option value="beta" <?= (($siteCfg['updateChannel'] ?? 'stable') === 'beta') ? 'selected' : '' ?>>beta · 尝鲜版（取 /releases 第一条，可能含预发布）</option>
+                            </select>
+                            <span class="small muted">stable：只检查 GitHub 上最新发布的正式版。beta：会取 Releases 列表第一条，包含预发布版本。切换通道后升级页会自动重新检查。</span>
                         </label>
+
                         <button type="submit" class="btn btn-primary">保存前台设置</button>
                     </form>
                 </div>
@@ -4920,7 +4054,7 @@ if (empty($adminPreloaders)) {
                 <div class="backup-title">🎨 加载页</div>
                 <ul class="help-list">
                     <li>上传 <code>.css</code> 文件到 <code>assets/preloaders/</code>，首行注释可写名称和描述：</li>
-                    <li><code>/* @name 优雅 */</code> 与 <code>/* @description 紫罗兰柔光 */</code></li>
+                    <li><code>/* @name 柔光 */</code> 与 <code>/* @description 紫罗兰柔光 */</code></li>
                     <li>拖动排序后，<b>排首位的主题自动成为默认</b>。</li>
                     <li>用户可在前台控制面板自行切换加载动画，选择会记录在本地。</li>
                 </ul>
@@ -4976,7 +4110,8 @@ if (empty($adminPreloaders)) {
                 <ul class="help-list">
                     <li><b>前台</b>：标题、头像、favicon、进入后台的连点次数/时间窗口。</li>
                     <li><b>前台</b>：背景与 Banner 的 API、轮播间隔、缓存池上限。</li>
-                    <li><b>前台</b>：页脚版权信息、GitHub 链接（含开关）、Powered by 项目名与链接。</li>
+                    <li><b>前台</b>：页脚版权信息（支持 HTML）。</li>
+                    <li><b>前台</b>：GitHub Token（可选，用于提升 API 限额）与更新通道（stable / beta）。</li>
                     <li><b>后台</b>：登录页头像、标题、副标题、标签标题、顶部栏文字。</li>
                 </ul>
             </div>
@@ -5224,7 +4359,7 @@ if (empty($adminPreloaders)) {
         <input type="hidden" id="preloaderEditKey">
         <div class="form-group">
             <label class="form-label">显示名称 <span class="req">*</span></label>
-            <input type="text" id="preloaderEditName" maxlength="30" placeholder="例如：优雅">
+            <input type="text" id="preloaderEditName" maxlength="30" placeholder="例如：柔光">
         </div>
         <div class="form-group">
             <label class="form-label">描述</label>
@@ -5304,7 +4439,7 @@ if (empty($adminPreloaders)) {
                 <img id="localRenamePreviewImg" src="" alt="">
             </div>
         </div>
-        
+
         <div class="form-group">
             <label class="form-label">目标设备</label>
             <div class="local-target-switch">
@@ -5314,12 +4449,12 @@ if (empty($adminPreloaders)) {
                 <button type="button" class="btn target-btn" data-target="both">🌐 通用</button>
             </div>
         </div>
-        
+
         <div class="form-group">
             <label class="form-label">新文件名 <span class="req">*</span></label>
             <input type="text" id="localRenameName" maxlength="60" placeholder="不含扩展名">
         </div>
-        
+
         <div class="modal-foot">
             <button type="button" class="btn btn-ghost" id="localRenameCancel">取消</button>
             <button type="button" class="btn btn-primary" id="localRenameSave">保存</button>
