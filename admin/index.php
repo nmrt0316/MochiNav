@@ -3854,21 +3854,6 @@ if (empty($adminPreloaders)) {
                             </div>
                             <p class="footer-locked-tip">🔒 开发者和项目链接已锁定，防止二次开发时误改项目归属。如需二次开发，请 fork 后自行修改源码。</p>
                         </div>
-
-                        <div class="form-group-title">🚀 在线升级专属</div>
-
-                        <label>GitHub Token（可选）
-                            <input type="password" name="githubToken" value="<?= e($siteCfg['githubToken'] ?? '') ?>" maxlength="200" placeholder="ghp_xxxxxxxxxxxx（留空则匿名访问）" autocomplete="new-password">
-                            <span class="small muted">填写后可将 GitHub API 速率上限从 60 次/小时提升到 5000 次/小时，并支持访问私有仓库的 Release。留空则走匿名访问。</span>
-                        </label>
-                        <label>更新通道
-                            <select name="updateChannel">
-                                <option value="stable" <?= (($siteCfg['updateChannel'] ?? 'stable') === 'stable') ? 'selected' : '' ?>>stable · 正式版（仅取 /releases/latest）</option>
-                                <option value="beta" <?= (($siteCfg['updateChannel'] ?? 'stable') === 'beta') ? 'selected' : '' ?>>beta · 尝鲜版（取 /releases 第一条，可能含预发布）</option>
-                            </select>
-                            <span class="small muted">stable：只检查 GitHub 上最新发布的正式版。beta：会取 Releases 列表第一条，包含预发布版本。切换通道后升级页会自动重新检查。</span>
-                        </label>
-
                         <button type="submit" class="btn btn-primary">保存前台设置</button>
                     </form>
                 </div>
@@ -3924,6 +3909,19 @@ if (empty($adminPreloaders)) {
                         </label>
                         <label>后台顶部栏文字
                             <input type="text" name="adminHeaderTitle" value="<?= e($siteCfg['adminHeaderTitle']) ?>" maxlength="30">
+                        </label>
+                        <div class="form-group-title">🚀 在线升级专属</div>
+
+                        <label>GitHub Token（可选）
+                            <input type="password" name="githubToken" value="<?= e($siteCfg['githubToken'] ?? '') ?>" maxlength="200" placeholder="ghp_xxxxxxxxxxxx（留空则匿名访问）" autocomplete="new-password">
+                            <span class="small muted">填写后可将 GitHub API 速率上限从 60 次/小时提升到 5000 次/小时，并支持访问私有仓库的 Release。留空则走匿名访问。</span>
+                        </label>
+                        <label>更新通道
+                            <select name="updateChannel">
+                                <option value="stable" <?= (($siteCfg['updateChannel'] ?? 'stable') === 'stable') ? 'selected' : '' ?>>stable · 正式版（仅取 /releases/latest）</option>
+                                <option value="beta" <?= (($siteCfg['updateChannel'] ?? 'stable') === 'beta') ? 'selected' : '' ?>>beta · 尝鲜版（取 /releases 第一条，可能含预发布）</option>
+                            </select>
+                            <span class="small muted">stable：只检查 GitHub 上最新发布的正式版。beta：会取 Releases 列表第一条，包含预发布版本。切换通道后升级页会自动重新检查。</span>
                         </label>
                         <button type="submit" class="btn btn-primary">保存后台设置</button>
                     </form>
