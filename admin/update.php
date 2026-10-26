@@ -36,7 +36,6 @@ $releasesPage = 'https://github.com/' . UPDATE_GITHUB_REPO . '/releases';
 })();
 </script>
 <style>
-/* 样式保持与你原来完全一致，无需改动 */
 body.update-page { padding: 0; min-height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); background-attachment: fixed; }
 html[data-theme="dark"] body.update-page { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); }
 .update-container { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
@@ -73,7 +72,9 @@ html[data-theme="dark"] .update-release-body { background: #33384e; color: #c5c9
 .update-release-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .update-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
 .update-actions .btn { padding: 10px 20px; font-size: 14px; font-weight: 500; justify-content: center; }
-.update-action-tip { font-size: 12.5px; color: var(--text-muted, #909399); line-height: 1.6; margin-top: 4px; }
+/* 浅色模式对比度修复：提示文字加深，避免看不清 */
+.update-action-tip { font-size: 12.5px; color: #4b5563; line-height: 1.6; margin-top: 4px; }
+html[data-theme="dark"] .update-action-tip { color: #c5c9e2; }
 .update-action-empty { padding: 12px; text-align: center; color: var(--text-muted, #909399); font-size: 14px; }
 .update-progress { margin-top: 14px; }
 .update-progress-bar { width: 100%; height: 6px; background: var(--bg-chip, #f0f2f7); border-radius: 3px; overflow: hidden; margin-bottom: 8px; }
@@ -91,14 +92,40 @@ html[data-theme="dark"] .update-state-value.is-ok { color: #34d399; }
 html[data-theme="dark"] .update-state-value.is-err { color: #f87171; }
 html[data-theme="dark"] .update-state-value.is-warn { color: #fbbf24; }
 html[data-theme="dark"] .update-state-value.is-loading { color: #79bbff; }
-.update-warning { margin-top: 20px; padding: 12px 14px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.30); border-radius: 12px; font-size: 12.5px; line-height: 1.7; color: #92400e; }
-html[data-theme="dark"] .update-warning { background: rgba(245, 158, 11, 0.12); border-color: rgba(245, 158, 11, 0.35); color: #fbbf24; }
-.update-warning code { background: rgba(0, 0, 0, 0.06); padding: 1px 6px; border-radius: 4px; font-family: Consolas, Menlo, monospace; font-size: 11.5px; word-break: break-all; }
+/* 浅色模式对比度修复：警告框文字加深 */
+.update-warning {
+    margin-top: 20px;
+    padding: 12px 14px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.32);
+    border-radius: 12px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #78350f;
+}
+html[data-theme="dark"] .update-warning {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+}
+.update-warning code {
+    background: rgba(0, 0, 0, 0.06);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-family: Consolas, Menlo, monospace;
+    font-size: 11.5px;
+    word-break: break-all;
+    color: inherit;
+}
 html[data-theme="dark"] .update-warning code { background: rgba(0, 0, 0, 0.25); }
 .update-header .btn-back { background: rgba(255, 255, 255, 0.18); color: #ffffff; border: 1px solid rgba(255, 255, 255, 0.28); box-shadow: none; padding: 8px 14px; border-radius: 8px; }
 .update-header .btn-back:hover { background: rgba(255, 255, 255, 0.28); box-shadow: none; }
 html[data-theme="dark"] .update-header .btn-back { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); color: #e8eaf6; }
 html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 255, 255, 0.14); }
+.update-tool-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; justify-content: center; }
+.update-tool-row .btn { flex: 1; min-width: 130px; }
+.update-rollback-btn { background: rgba(245, 108, 108, 0.12); color: #dc2626; border: 1px solid rgba(245, 108, 108, 0.40); }
+html[data-theme="dark"] .update-rollback-btn { background: rgba(245, 108, 108, 0.18); color: #f87171; border-color: rgba(245, 108, 108, 0.5); }
 </style>
 </head>
 <body class="update-page">
@@ -154,6 +181,7 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
     <div class="update-card" id="actionsCard">
         <div class="update-card-title">⚡ 操作</div>
         <div class="update-actions" id="actionButtons"></div>
+        <div class="update-tool-row" id="toolButtons"></div>
         <div class="update-progress" id="progressArea" style="display:none">
             <div class="update-progress-bar"><div class="update-progress-fill" id="progressFill"></div></div>
             <div class="update-progress-text" id="progressText">准备中…</div>
@@ -183,9 +211,10 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
 
     <!-- 风险提示 -->
     <div class="update-warning">
-        ⚠️ 在线升级会覆盖代码文件（<code>*.php</code> / <code>*.css</code> / <code>*.js</code> 等），
-        但<b>不会动</b> <code>admin/data.json</code>、<code>admin/.admin.conf</code>、<code>photos/</code>、
-        <code>assets/js/</code>、<code>assets/preloaders/</code>、<code>README.md</code>、<code>LICENSE</code>、<code>CHANGELOG.md</code>。
+        ⚠️ 在线升级会覆盖代码文件（<code>*.php</code> / <code>*.css</code> / <code>*.js</code> / <code>README.md</code> / <code>CHANGELOG.md</code>），
+        但<b>不会动</b> <code>admin/data.json</code>、<code>admin/.admin.conf</code>、<code>admin/.update/</code>、
+        <code>photos/</code> 下的普通图片（<code>photos/kanban/</code> 内的形象文件仅覆盖同名文件，不会删除你添加的其它形象）、
+        <code>assets/js/</code> 与 <code>assets/preloaders/</code> 下你自建的同名以外文件（同名文件会被覆盖）。
         升级失败会自动回滚，也可以手动回滚到上一版本。
     </div>
 
@@ -349,23 +378,26 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
     }
 
     /* ======================================================================
-       重构操作区渲染逻辑：让状态不再互相锁死
+       操作区渲染：只要「有新版本 + 环境可写」，永远优先展示升级入口
+       无论上次是 idle / failed / rolled_back，都不锁死升级按钮
        ====================================================================== */
     function renderActions() {
         var box = document.getElementById('actionButtons');
+        var toolBox = document.getElementById('toolButtons');
         if (!box) return;
         box.innerHTML = '';
+        if (toolBox) toolBox.innerHTML = '';
 
         var st = state.statusValue || 'idle';
 
-        /* 1. 进度中 */
+        /* --- 1. 进行中：只显示进度 --- */
         if (st === 'downloading' || st === 'applying') {
             showProgress(st === 'downloading' ? '正在下载更新包…' : '正在应用升级…');
             return;
         }
         hideProgress();
 
-        /* 2. 升级成功 (success) */
+        /* --- 2. success：显示「刷新后台」+ 次级回滚 --- */
         if (st === 'success') {
             var refreshBtn = document.createElement('button');
             refreshBtn.className = 'btn btn-primary';
@@ -373,22 +405,23 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
             refreshBtn.onclick = function () { window.location.href = 'index.php'; };
             box.appendChild(refreshBtn);
 
-            if (state.canRollback) {
-                var rbBtn = document.createElement('button');
-                rbBtn.className = 'btn';
-                rbBtn.style.cssText = 'background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);margin-top:8px;';
-                rbBtn.textContent = '↩ 回滚到上一版本';
-                rbBtn.onclick = doRollback;
-                box.appendChild(rbBtn);
-            }
             var tipS = document.createElement('div');
             tipS.className = 'update-action-tip';
-            tipS.textContent = '升级已完成。如后台顶部栏版本号仍显示旧版本，请刷新页面（Ctrl+F5 强制刷新）以清除浏览器缓存。';
+            tipS.textContent = '升级已完成。如果后台顶部栏版本号仍显示旧版本，请按 Ctrl+F5 强制刷新以清除浏览器缓存。';
             box.appendChild(tipS);
+
+            if (state.canRollback && toolBox) {
+                var rbBtn = document.createElement('button');
+                rbBtn.className = 'btn update-rollback-btn';
+                rbBtn.textContent = '↩ 回滚到上一版本';
+                rbBtn.onclick = doRollback;
+                toolBox.appendChild(rbBtn);
+            }
+            appendRecheckButton(toolBox);
             return;
         }
 
-        /* 3. 已下载等待应用 (downloaded) */
+        /* --- 3. downloaded：应用按钮 --- */
         if (st === 'downloaded') {
             var applyBtn = document.createElement('button');
             applyBtn.className = 'btn btn-primary';
@@ -400,31 +433,36 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
             applyTip.className = 'update-action-tip';
             applyTip.textContent = '更新包已下载完成，点击上方按钮即可应用。应用前会自动备份当前代码。';
             box.appendChild(applyTip);
+
+            if (state.canRollback && toolBox) {
+                var rbBtn2 = document.createElement('button');
+                rbBtn2.className = 'btn update-rollback-btn';
+                rbBtn2.textContent = '↩ 回滚到上一版本';
+                rbBtn2.onclick = doRollback;
+                toolBox.appendChild(rbBtn2);
+            }
+            appendRecheckButton(toolBox);
             return;
         }
 
-        /* ====================================================
-           4. 其他状态（idle / failed / rolled_back 统一处理）
-           只要有更新且环境支持，第一优先级永远是直接给“立即升级”
-           ==================================================== */
+        /* --- 4. idle / failed / rolled_back：主入口永远是「立即升级」 --- */
         if (state.hasUpdate && state.env && state.env.writable) {
             var upBtn = document.createElement('button');
             upBtn.className = 'btn btn-primary';
-            upBtn.innerHTML = '⬆ 立即升级到 v' + state.latestVersion;
+            upBtn.innerHTML = '⬆ 立即升级到 v' + (state.latestVersion || '');
             upBtn.onclick = doUpgrade;
             box.appendChild(upBtn);
 
             var tipUp = document.createElement('div');
             tipUp.className = 'update-action-tip';
-            tipUp.textContent = '点击按钮将自动下载并覆盖代码（不会动 data.json / photos 等数据）。';
-            
-            // 如果处于失败或回滚状态，给出提示说明
             if (st === 'failed' || st === 'rolled_back') {
-                tipUp.innerHTML = '上次操作状态：<b class="' + (st === 'failed' ? 'text-danger' : 'text-warning') + '">' + (st === 'failed' ? '失败' : '已回滚') + '</b>。你可以再次尝试升级。';
+                var stLabel = (st === 'failed') ? '失败' : '已回滚';
+                tipUp.innerHTML = '上次操作状态：<b>' + stLabel + '</b>。你可以直接再次尝试升级。';
+            } else {
+                tipUp.textContent = '点击按钮将自动下载并覆盖代码（不会动 data.json / photos / assets 中的私有数据）。';
             }
             box.appendChild(tipUp);
-        } 
-        else if (state.hasUpdate && state.env && !state.env.writable) {
+        } else if (state.hasUpdate && state.env && !state.env.writable) {
             var ghBtn = document.createElement('a');
             ghBtn.className = 'btn btn-primary';
             ghBtn.href = state.releaseUrl || releasesPage;
@@ -437,47 +475,39 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
             tipNoEnv.className = 'update-action-tip';
             tipNoEnv.textContent = '当前主机环境不支持在线升级，请下载最新压缩包后按 README 说明手动覆盖。';
             box.appendChild(tipNoEnv);
-        } 
-        else if (!state.hasUpdate && state.latestVersion) {
+        } else if (!state.hasUpdate && state.latestVersion) {
             var p = document.createElement('div');
             p.className = 'update-action-empty';
             p.textContent = '✅ 已是最新版本 v' + state.latestVersion + '，无需升级。';
             box.appendChild(p);
-        } 
-        else {
+        } else {
             var loading = document.createElement('div');
             loading.className = 'update-action-empty';
             loading.textContent = '正在检查更新…';
             box.appendChild(loading);
         }
 
-        /* ====================================================
-           5. 底部附带工具按钮（重新检查 / 强制回滚）
-           无论主操作是什么，都可以重新检查或回滚
-           ==================================================== */
-        var extraActions = document.createElement('div');
-        extraActions.style.cssText = 'display:flex; gap:10px; margin-top:16px; flex-wrap:wrap; justify-content:center;';
-        
+        /* --- 5. 次级工具区：永远显示「重新检查」；有可用备份时额外显示回滚 --- */
+        if (state.canRollback && toolBox) {
+            var rbBtn3 = document.createElement('button');
+            rbBtn3.className = 'btn update-rollback-btn';
+            rbBtn3.textContent = '↩ 回滚到上一版本';
+            rbBtn3.onclick = doRollback;
+            toolBox.appendChild(rbBtn3);
+        }
+        appendRecheckButton(toolBox);
+    }
+
+    function appendRecheckButton(toolBox) {
+        if (!toolBox) return;
         var chkBtn = document.createElement('button');
         chkBtn.className = 'btn';
-        chkBtn.style.cssText = 'flex:1; min-width:120px;';
         chkBtn.innerHTML = '🔄 重新检查更新';
-        chkBtn.onclick = function () { 
-            state.statusValue = 'idle'; // 强制重置本地状态，防止点击后卡住
-            doCheckUpdate(); 
+        chkBtn.onclick = function () {
+            state.statusValue = 'idle';
+            doCheckUpdate();
         };
-        extraActions.appendChild(chkBtn);
-
-        if (state.canRollback) {
-            var rbBtn2 = document.createElement('button');
-            rbBtn2.className = 'btn';
-            rbBtn2.style.cssText = 'flex:1; min-width:120px; background:rgba(245,108,108,0.12);color:#dc2626;border:1px solid rgba(245,108,108,0.40);';
-            rbBtn2.textContent = '↩ 回滚到上一版本';
-            rbBtn2.onclick = doRollback;
-            extraActions.appendChild(rbBtn2);
-        }
-        
-        box.appendChild(extraActions);
+        toolBox.appendChild(chkBtn);
     }
 
     /* 动作 */
@@ -651,10 +681,6 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
                 state.canRollback = !!st.can_rollback;
             }
         } catch (e) {}
-
-        if (state.statusValue === 'downloaded') {
-            renderActions();
-        }
 
         await doCheckUpdate();
         startPolling();
