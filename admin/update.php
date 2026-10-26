@@ -26,6 +26,7 @@ $releasesPage = 'https://github.com/' . UPDATE_GITHUB_REPO . '/releases';
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>在线升级 · 糯米の引导页</title>
 <link rel="stylesheet" href="../assets/admin.css">
+<script src="../assets/updater.js"></script>
 <script>
 (function () {
     try {
@@ -72,7 +73,6 @@ html[data-theme="dark"] .update-release-body { background: #33384e; color: #c5c9
 .update-release-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 .update-actions { display: flex; flex-direction: column; gap: 10px; align-items: stretch; }
 .update-actions .btn { padding: 10px 20px; font-size: 14px; font-weight: 500; justify-content: center; }
-/* 浅色模式对比度修复：提示文字加深，避免看不清 */
 .update-action-tip { font-size: 12.5px; color: #4b5563; line-height: 1.6; margin-top: 4px; }
 html[data-theme="dark"] .update-action-tip { color: #c5c9e2; }
 .update-action-empty { padding: 12px; text-align: center; color: var(--text-muted, #909399); font-size: 14px; }
@@ -92,7 +92,6 @@ html[data-theme="dark"] .update-state-value.is-ok { color: #34d399; }
 html[data-theme="dark"] .update-state-value.is-err { color: #f87171; }
 html[data-theme="dark"] .update-state-value.is-warn { color: #fbbf24; }
 html[data-theme="dark"] .update-state-value.is-loading { color: #79bbff; }
-/* 浅色模式对比度修复：警告框文字加深 */
 .update-warning {
     margin-top: 20px;
     padding: 12px 14px;
@@ -518,7 +517,7 @@ html[data-theme="dark"] .update-rollback-btn { background: rgba(245, 108, 108, 0
             vsEl.textContent = '正在检查更新…';
         }
         try {
-            var data = await api('update_check');
+            var data = await window.NuomiUpdater.check();
             if (!data.ok) {
                 toast(data.msg || '检查更新失败', 'error');
                 if (vsEl) { vsEl.textContent = '检查失败'; vsEl.className = 'update-status-badge'; }
