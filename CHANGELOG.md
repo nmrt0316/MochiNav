@@ -15,6 +15,27 @@
 
 ---
 
+## [1.1.3-beta.1] - 2026-10-26
+
+### 新增
+- **公共升级请求模块 `assets/updater.js`**：封装 `window.NuomiUpdater.check()`，统一向后端 `index.php` 发送 `update_check` 请求并返回结构化 Promise；后台首页版本胶囊与在线升级页共用同一套请求逻辑，消除重复代码。
+- **后台首页版本号胶囊状态自检**：登录后台后延迟 1.5 秒自动检查一次更新，**拿到结果前不改变胶囊颜色**（避免闪烁）。
+  - 发现新版本 → 胶囊附加 `.has-update`，橙色脉冲提示可点击升级。
+  - 已是最新 → 胶囊附加 `.is-latest`，播放 SVG 对勾描边动画，5 秒后自动移除状态并隐藏对勾，恢复初始外观。
+  - 请求异常 → 胶囊附加 `.is-error`，变红提示。
+- **Beta 通道视觉标识**：当站点更新通道为 `beta` 时，顶部版本胶囊自动附加 `is-beta` 类，显示为淡金色 `· Beta` 标记，与正式版视觉区分。
+- **版本胶囊预埋 SVG 对勾**：`<svg class="ver-check">` 默认隐藏，仅在检测到最新版本时通过 `.is-latest` 类触发 `stroke-dashoffset` 描边动画，优雅地画出对勾。
+
+### 变更
+- **`admin/update.php` 重构**：删除内联的 API 请求代码，`doCheckUpdate` 改为调用 `window.NuomiUpdater.check()`，与后台首页共用同一套请求逻辑；「重新检查更新」按钮由 emoji 改为 SVG 图标（与页面顶部「在线升级」风格统一）。
+- **`admin/index.php` 引入 `assets/updater.js`**：在 `<head>` 中加载，供版本胶囊自检使用。
+- **`admin/index.php` 顶部版本号胶囊**：`<a class="header-version">` 增加 `id="headerVersionBtn"`，结构改为 `<span class="ver-text">` 包裹版本文字 + 预埋隐藏的 SVG 对勾；Beta 通道下自动附加 `is-beta` 类。
+
+### 修复
+- **版本胶囊状态类不闪烁**：拿到检查结果前绝不修改 DOM，避免「初始态 → 加载态 → 结果态」的视觉抖动。
+
+---
+
 ## [1.1.2] - 2026-10-26
 
 ### 新增
@@ -23,12 +44,6 @@
 - **后台独立升级模块 `admin/updater.php`**：原 `admin/index.php` 中约 1100 行在线升级逻辑独立成模块，`admin/index.php` 只保留 5 个 `update_*` case 统一委托给 `updater_handle_action()`。
 - **站点设置四分区重构**：前台设置页拆成「⚙️ 基础设置 / 🔐 后台安全入口 / 🔗 页脚信息 / 🚀 在线升级专属」四个区块。
 - **页脚锁定信息区**：硬编码显示作者信息与 GitHub 链接，并加锁定提示，防止二开误改项目归属。
-
-### Beta 版特性
-- **新增公共模块 `assets/updater.js`**：封装 `window.NuomiUpdater.check()`，统一向 `index.php` 发起 `update_check` 请求，供后台首页版本胶囊与在线升级页共用，消除重复代码。
-- **后台首页版本号胶囊状态自检**：登录后台后延迟 1.5 秒自动检查一次更新，未拿到结果前不改变胶囊颜色；发现新版本 → 橙色脉冲 + 「has-update」；已是最新 → 绿色 + SVG 对勾描边动画（5 秒后自动恢复初始状态）；请求异常 → 红色「is-error」。
-- **Beta 通道视觉标识**：当站点更新通道为 `beta` 时，顶部版本胶囊自动附加 `is-beta` 类，显示为淡金色，与正式版区分。
-- **版本胶囊预埋 SVG 对勾**：`<svg class="ver-check">` 默认隐藏，仅在检测到最新版本时通过 `.is-latest` 类触发 `stroke-dashoffset` 描边动画，优雅地画出对勾。
 
 ### 变更
 - **版本号**：`1.1.1` → `1.1.2`。
@@ -40,7 +55,6 @@
   - `README.md`、`CHANGELOG.md` 移出保护名单，允许升级覆盖。
   - `assets/js/`、`assets/preloaders/`、`photos/kanban/` 下允许覆盖同名文件（用户新增的不同名文件不受影响）。
   - 绝对保护：`admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/` 下普通图片。
-- **`admin/update.php` 重构**：删除内联的 API 请求代码，`doCheckUpdate` 改为调用 `window.NuomiUpdater.check()`，与后台首页共用同一套请求逻辑。
 
 ### 修复
 - **在线升级状态锁死**：修复"失败"或"已回滚"状态下升级按钮被锁死、必须手动删 `state.json` 才能重试的问题。现在只要检测到新版本且环境允许，永远优先展示「⬆ 立即升级」按钮；「重新检查」和「回滚」作为次级按钮放在下方工具区。
@@ -139,6 +153,7 @@
 - **主版本号（MAJOR）**：不兼容的 API 变更、数据格式变更
 - **次版本号（MINOR）**：向下兼容的功能新增
 - **修订号（PATCH）**：向下兼容的 bug 修复
+- **预发布标识（-beta.N）**：预发布版本，语义版本规范允许使用 `-` 后缀标识；比同 `x.y.z` 的正式版优先级低
 
 ## 升级方式
 
