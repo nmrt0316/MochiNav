@@ -2565,31 +2565,90 @@
            ------------------------------------------------------------ */
         (function () {
             var btn = document.getElementById('headerVersionBtn');
-            if (!btn || !window.NuomiUpdater) return;
+            var textEl = document.getElementById('headerVerText');
+            if (!btn || !textEl || !window.NuomiUpdater) return;
 
-            var checkIcon = btn.querySelector('.ver-check');
+            var baseVerText = textEl.textContent; // 例如 "v1.1.3 · Beta"
+            var timers = [];
+            var hasCache = false;
 
-            setTimeout(function () {
-                window.NuomiUpdater.check().then(function (data) {
-                    if (!data || !data.ok) {
+            function animateText(newText) {
+                textEl.classList.add('fade-out');
+                timers.push(setTimeout(function () {
+                    textEl.textContent = newText;
+                    textEl.classList.remove('fade-out');
+                }, 250));
+            }
+
+            try { hasCache = sessionStorage.getItem('nuomi_has_update') === '1'; } catch(e) {}
+
+            if (hasCache) {
+                btn.classList.add('has-update');
+            } else {
+                // 1.5 秒后开始检查
+                timers.push(setTimeout(function () {
+                    btn.classList.add('is-checking');
+                    
+                    window.NuomiUpdater.check().then(function (data) {
+                        btn.classList.remove('is-checking');
+                        
+                        if (!data || !data.ok) {
+                            // 检查失败
+                            btn.classList.add('is-error');
+                            animateText('检查更新失败');
+                            
+                            timers.push(setTimeout(function () {
+                                animateText(baseVerText);
+                                timers.push(setTimeout(function () {
+                                    btn.classList.remove('is-error');
+                                }, 500)); // 文字变回后再停留 0.5s 才褪色
+                            }, 2500));
+                            return;
+                        }
+
+                        if (data.has_update) {
+                            // 发现新版本
+                            try { sessionStorage.setItem('nuomi_has_update', '1'); } catch(e) {}
+                            btn.classList.add('has-update');
+                            
+                            var latest = data.latest_version || '';
+                            animateText('发现新版本');
+                            
+                            timers.push(setTimeout(function () {
+                                animateText('最新 v' + latest);
+                                
+                                timers.push(setTimeout(function () {
+                                    animateText(baseVerText);
+                                    // 文字变回后，橙色底色和呼吸光晕永久保留
+                                }, 2500));
+                            }, 2500));
+
+                        } else {
+                            // 已是最新
+                            btn.classList.add('is-latest');
+                            animateText('已是最新版本');
+                            
+                            timers.push(setTimeout(function () {
+                                animateText(baseVerText);
+                                timers.push(setTimeout(function () {
+                                    btn.classList.remove('is-latest');
+                                }, 500)); // 文字变回后再停留 0.5s 才褪色
+                            }, 2500));
+                        }
+                    }).catch(function () {
+                        btn.classList.remove('is-checking');
                         btn.classList.add('is-error');
-                        return;
-                    }
-                    if (data.has_update) {
-                        btn.classList.add('has-update');
-                        btn.title = '发现新版本 v' + (data.latest_version || '') + '，点击查看';
-                    } else {
-                        btn.classList.add('is-latest');
-                        if (checkIcon) checkIcon.style.display = '';
-                        setTimeout(function () {
-                            btn.classList.remove('is-latest');
-                            if (checkIcon) checkIcon.style.display = 'none';
-                        }, 5000);
-                    }
-                }).catch(function () {
-                    btn.classList.add('is-error');
-                });
-            }, 1500);
+                        animateText('检查更新失败');
+                        
+                        timers.push(setTimeout(function () {
+                            animateText(baseVerText);
+                            timers.push(setTimeout(function () {
+                                btn.classList.remove('is-error');
+                            }, 500));
+                        }, 2500));
+                    });
+                }, 1500));
+            }
         })();
 
     }
