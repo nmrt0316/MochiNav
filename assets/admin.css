@@ -145,13 +145,13 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
 .header-title { color: #fff; font-size: 18px; font-weight: 600; letter-spacing: .5px; white-space: nowrap; }
 .admin-header-right { display: flex; gap: 8px; align-items: center; }
 
-/* 版本号胶囊基础样式 */
+/* 版本号胶囊基础样式 —— 灵动岛风格 */
 .header-version {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    height: 24px;
-    padding: 0 10px;
+    height: 26px;
+    padding: 0 12px;
     border-radius: 20px;
     font-size: 11.5px;
     font-weight: 600;
@@ -162,40 +162,45 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     white-space: nowrap;
-    overflow: hidden;
     border: 1px solid transparent;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
     
-    /* 关键：平滑宽高、颜色、阴影、光晕 */
-    transition: width 0.4s ease, background-color 0.6s ease, border-color 0.6s ease, color 0.6s ease, box-shadow 0.6s ease;
+    /* 弹簧缓动，丝滑伸缩与渐变 */
+    transition: width 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), 
+                background-color 0.6s ease, 
+                border-color 0.6s ease, 
+                color 0.6s ease, 
+                box-shadow 0.6s ease;
 }
 
-/* 正式版常态：半透明白 */
+/* 正式版常态：极度通透的白色 */
 .header-version {
-    background: rgba(255, 255, 255, 0.15);
-    color: rgba(255, 255, 255, 0.9);
-    border-color: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.85);
+    border-color: rgba(255, 255, 255, 0.12);
 }
 .header-version:hover, .header-version:active {
-    background: rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.18);
     color: #fff;
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transform: translateY(-1px);
 }
 
-/* Beta版常态：透明淡蓝色 */
+/* Beta版常态：极度通透的淡蓝色 */
 .header-version.is-beta {
-    background: rgba(64, 158, 255, 0.15);
+    background: rgba(64, 158, 255, 0.10);
     color: #93c5fd;
-    border-color: rgba(64, 158, 255, 0.3);
+    border-color: rgba(64, 158, 255, 0.20);
 }
 .header-version.is-beta:hover, .header-version.is-beta:active {
-    background: rgba(64, 158, 255, 0.25);
+    background: rgba(64, 158, 255, 0.20);
     color: #bfdbfe;
-    border-color: rgba(64, 158, 255, 0.5);
+    border-color: rgba(64, 158, 255, 0.35);
 }
 
-/* 文字内容交叉淡入淡出 */
+/* 文字交叉淡入淡出 */
 .header-version .ver-text {
     display: inline-block;
     transition: opacity 0.25s ease;
@@ -205,47 +210,45 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
     opacity: 0;
 }
 
-/* 正在检查：微光呼吸 */
+/* 正在检查：微微发光呼吸 */
 .header-version.is-checking {
     animation: verBreath 3s ease-in-out infinite;
 }
 @keyframes verBreath {
     0%, 100% { opacity: 1; }
-    50% { opacity: 0.65; }
+    50% { opacity: 0.5; }
 }
 
-/* 发现新版本：琥珀橙呼吸 */
+/* 发现新版本：通透的琥珀橙呼吸 */
 .header-version.has-update {
-    background: rgba(245, 158, 11, 0.85);
-    color: #fff;
-    border-color: rgba(245, 158, 11, 0.9);
+    background: rgba(245, 158, 11, 0.20);
+    color: #fbbf24;
+    border-color: rgba(245, 158, 11, 0.40);
     animation: verPulse 2.5s ease-in-out infinite;
 }
 @keyframes verPulse {
-    0%, 100% { box-shadow: 0 0 8px rgba(245, 158, 11, 0.4); }
-    50% { box-shadow: 0 0 18px rgba(245, 158, 11, 0.8); }
+    0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.15); }
+    50% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
 }
+.header-version.has-update:hover { background: rgba(245, 158, 11, 0.3); }
 
-/* 已是最新：莫兰迪绿 */
+/* 已是最新：通透的翡翠绿 */
 .header-version.is-latest {
-    background: rgba(16, 185, 129, 0.85);
-    color: #fff;
-    border-color: rgba(16, 185, 129, 0.9);
-    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.20);
+    color: #34d399;
+    border-color: rgba(16, 185, 129, 0.40);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.15);
 }
+.header-version.is-latest:hover { background: rgba(16, 185, 129, 0.3); }
 
-/* 检查失败：柔和红 */
+/* 检查失败：通透的柔和红 */
 .header-version.is-error {
-    background: rgba(239, 68, 68, 0.85);
-    color: #fff;
-    border-color: rgba(239, 68, 68, 0.9);
-    box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.20);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.40);
+    box-shadow: 0 0 12px rgba(239, 68, 68, 0.15);
 }
-
-/* 确保动态状态下悬停也有合理反馈 */
-.header-version.has-update:hover { background: rgba(245, 158, 11, 1); }
-.header-version.is-latest:hover { background: rgba(16, 185, 129, 1); }
-.header-version.is-error:hover { background: rgba(239, 68, 68, 1); }
+.header-version.is-error:hover { background: rgba(239, 68, 68, 0.3); }
 
 
 .admin-tabs {
