@@ -1,31 +1,12 @@
 <?php
 /* ==========================================================================
-   糯米の引导页 - 默认值唯一权威来源
-   
-   前台 index.php / announcement.php 和后台 admin/index.php 都 require_once 本文件。
-   首次安装时这些默认值写入 data.json；之后前台只读 data.json，
-   仅当某字段被用户手动删空时，用这里的值兜底。
+   糯米の引导页 - 默认值与升级常量（前后台共用）
    ========================================================================== */
 
-/* ==========================================================================
-   版本号
-   升级时只改这一行，后台顶部栏会自动显示。
-   ========================================================================== */
 if (!defined('NUOMI_VERSION')) {
-    define('NUOMI_VERSION', '1.1.1');
+    define('NUOMI_VERSION', '1.1.2');
 }
 
-/* ==========================================================================
-   在线升级配置
-   --------------------------------------------------------------------------
-   对接 GitHub Releases API：
-     https://api.github.com/repos/{UPDATE_GITHUB_REPO}/releases/latest
-   - UPDATE_GITHUB_REPO      GitHub 仓库 owner/repo 字符串
-   - UPDATE_DIR              在线升级工作目录（缓存 / 包 / 备份 / state）
-   - UPDATE_MAX_PACKAGE_MB   下载 zip 的大小上限（MB）
-   - UPDATE_MAX_EXTRACTED_MB 解压后文件总大小上限（MB，防 zip 炸弹）
-   - UPDATE_BACKUP_KEEP      本地保留最近几份代码备份
-   ========================================================================== */
 if (!defined('UPDATE_GITHUB_REPO')) {
     define('UPDATE_GITHUB_REPO', 'nmrt0316/MochiNav');
 }
@@ -45,16 +26,13 @@ if (!defined('UPDATE_BACKUP_KEEP')) {
 if (!defined('NUOMI_DEFAULTS_LOADED')) {
     define('NUOMI_DEFAULTS_LOADED', true);
 
-    /* ==========================================================================
-       站点配置默认值
-       ========================================================================== */
     if (!function_exists('site_defaults')) {
         function site_defaults() {
             return [
                 'pageTitle'        => '糯米の引导页',
                 'title'            => '糯米の引导页',
                 'subtitle'         => '又一个引导页',
-                'avatar'           => 'https://q1.qlogo.cn/g?b=qq&nk=1498583218&s=640',
+                'avatar'           => 'photos/QQ.jpg',
                 'favicon'          => 'photos/QQ.jpg',
                 'bgApi'            => 'https://www.loliapi.com/acg/',
                 'bannerApi'        => 'https://www.loliapi.com/acg/pc/',
@@ -75,19 +53,17 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
                 'localBannerPriority' => 'api',
                 'localBgUaId'         => 'ua_mobile_default',
                 'localBannerUaId'     => 'ua_desktop_default',
-                /* 页脚配置 */
                 'copyright'           => '© ' . date('Y') . ' 糯米の引导页',
-                'githubUrl'           => 'https://github.com/nmrt0316',
-                'githubEnabled'       => '1',
                 'poweredBy'           => '糯米の引导页',
                 'poweredByUrl'        => 'https://github.com/nmrt0316/MochiNav',
+                'githubUrl'           => 'https://github.com/nmrt0316',
+                'githubEnabled'       => '1',
+                'githubToken'         => '',
+                'updateChannel'       => 'stable',
             ];
         }
     }
 
-    /* ==========================================================================
-       看板娘语录默认值
-       ========================================================================== */
     if (!function_exists('tips_defaults')) {
         function tips_defaults() {
             return [
@@ -116,9 +92,6 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
         }
     }
 
-    /* ==========================================================================
-       出厂默认数据（首次安装 / 恢复出厂）
-       ========================================================================== */
     if (!function_exists('factory_defaults')) {
         function factory_defaults() {
             return [
@@ -131,8 +104,7 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
                 'boardGirl'  => ['enabled' => true, 'girls' => []],
                 'photoOrder' => [],
                 'preloaders' => [
-                    ['key' => 'elegant', 'name' => '优雅', 'description' => '紫罗兰柔光 + 涟漪 + 光痕进度条', 'file' => 'assets/preloaders/elegant.css', 'enabled' => true],
-                    ['key' => 'apple',   'name' => '苹果',   'description' => '纯色背景 + 干净进度条 + 呼吸光晕',   'file' => 'assets/preloaders/apple.css',   'enabled' => true],
+                    ['key' => 'elegant', 'name' => '柔光', 'description' => '紫罗兰柔光 + 涟漪 + 光痕进度条', 'file' => 'assets/preloaders/elegant.css', 'enabled' => true]
                 ],
                 'site'       => site_defaults(),
                 'tips'       => tips_defaults(),
@@ -144,9 +116,6 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
         }
     }
 
-    /* ==========================================================================
-       内置 UA 伪装模板
-       ========================================================================== */
     if (!function_exists('ua_builtin_templates')) {
         function ua_builtin_templates() {
             return [
