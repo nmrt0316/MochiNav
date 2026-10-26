@@ -2560,6 +2560,38 @@
             }
         })();
 
+        /* ------------------------------------------------------------
+           3.7.12 后台首页版本号胶囊自检
+           ------------------------------------------------------------ */
+        (function () {
+            var btn = document.getElementById('headerVersionBtn');
+            if (!btn || !window.NuomiUpdater) return;
+
+            var checkIcon = btn.querySelector('.ver-check');
+
+            setTimeout(function () {
+                window.NuomiUpdater.check().then(function (data) {
+                    if (!data || !data.ok) {
+                        btn.classList.add('is-error');
+                        return;
+                    }
+                    if (data.has_update) {
+                        btn.classList.add('has-update');
+                        btn.title = '发现新版本 v' + (data.latest_version || '') + '，点击查看';
+                    } else {
+                        btn.classList.add('is-latest');
+                        if (checkIcon) checkIcon.style.display = '';
+                        setTimeout(function () {
+                            btn.classList.remove('is-latest');
+                            if (checkIcon) checkIcon.style.display = 'none';
+                        }, 5000);
+                    }
+                }).catch(function () {
+                    btn.classList.add('is-error');
+                });
+            }, 1500);
+        })();
+
     }
 
     /* ==========================================================================
