@@ -2888,7 +2888,19 @@ if (empty($adminPreloaders)) {
     $siteCfg['preloaderStyle'] = 'elegant';
 }
 
-$__isBetaChannel = (($siteCfg['updateChannel'] ?? 'stable') === 'beta');
+// ==========================================================================
+// 版本号显示逻辑（处理截断和 Beta 标识）
+// ==========================================================================
+$ver_text = NUOMI_VERSION;
+$is_beta = false;
+// 只要字符串里有 beta，就认为是 Beta 版
+if (stripos($ver_text, '-beta') !== false) {
+    $is_beta = true;
+    // 截取 -beta 前面的部分（例如 1.1.3-beta.1 -> 1.1.3）
+    $ver_text = preg_replace('/-beta.*/i', '', $ver_text);
+}
+$display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
+
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -3161,10 +3173,8 @@ $__isBetaChannel = (($siteCfg['updateChannel'] ?? 'stable') === 'beta');
     <header class="admin-header">
         <div class="admin-header-left">
             <span class="header-title"><?= e($siteCfg['adminHeaderTitle']) ?></span>
-            <a class="header-version<?= $__isBetaChannel ? ' is-beta' : '' ?>" id="headerVersionBtn" href="update.php" title="点击检查在线更新">
-                <span class="ver-text">v<?= NUOMI_VERSION ?><?= $__isBetaChannel ? ' · Beta' : '' ?></span>
-                <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px;opacity:0.8"><path d="M21 2v6h-6M3 12a9 9 0 1 0 2.6-6.4L21 8"/></svg>
-                <svg class="ver-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            <a class="header-version<?= $is_beta ? ' is-beta' : '' ?>" id="headerVersionBtn" href="update.php" title="点击检查在线更新">
+                <span class="ver-text" id="headerVerText"><?= e($display_ver) ?></span>
             </a>
         </div>
         <div class="admin-header-right">
