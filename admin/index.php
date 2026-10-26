@@ -2887,6 +2887,8 @@ if (empty($adminPreloaders)) {
     $defaultPreloaderKey = 'elegant';
     $siteCfg['preloaderStyle'] = 'elegant';
 }
+
+$__isBetaChannel = (($siteCfg['updateChannel'] ?? 'stable') === 'beta');
 ?>
 <!DOCTYPE html>
 <html lang="zh-CN">
@@ -2897,6 +2899,7 @@ if (empty($adminPreloaders)) {
     <title><?= e($siteCfg['adminPageTitle']) ?></title>
 
     <link rel="stylesheet" href="../assets/admin.css">
+    <script src="../assets/updater.js"></script>
 
     <?php if ($needInit || !$isLogin): ?>
     <?php if (!empty($adminPreloaders)): ?>
@@ -3158,9 +3161,10 @@ if (empty($adminPreloaders)) {
     <header class="admin-header">
         <div class="admin-header-left">
             <span class="header-title"><?= e($siteCfg['adminHeaderTitle']) ?></span>
-            <a class="header-version" href="update.php" title="点击检查在线更新">
-                v<?= NUOMI_VERSION ?>
+            <a class="header-version<?= $__isBetaChannel ? ' is-beta' : '' ?>" id="headerVersionBtn" href="update.php" title="点击检查在线更新">
+                <span class="ver-text">v<?= NUOMI_VERSION ?><?= $__isBetaChannel ? ' · Beta' : '' ?></span>
                 <svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-left:3px;opacity:0.8"><path d="M21 2v6h-6M3 12a9 9 0 1 0 2.6-6.4L21 8"/></svg>
+                <svg class="ver-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="display: none;"><polyline points="20 6 9 17 4 12"></polyline></svg>
             </a>
         </div>
         <div class="admin-header-right">
