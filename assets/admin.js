@@ -2572,12 +2572,13 @@
             var timers = [];
             var hasCache = false;
 
+            // 核心优化：文字淡出 -> 换字 -> 淡入。让宽度在透明期自然平滑伸缩
             function animateText(newText) {
                 textEl.classList.add('fade-out');
                 timers.push(setTimeout(function () {
                     textEl.textContent = newText;
                     textEl.classList.remove('fade-out');
-                }, 250));
+                }, 250)); // 250ms 对应 CSS 里的 opacity 过渡时间
             }
 
             try { hasCache = sessionStorage.getItem('nuomi_has_update') === '1'; } catch(e) {}
