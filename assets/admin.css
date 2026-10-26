@@ -163,6 +163,7 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
     transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
+    gap: 4px;
 }
 .header-version:hover, .header-version:active {
     background: rgba(255, 255, 255, 0.28);
@@ -170,6 +171,103 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
     border-color: rgba(255, 255, 255, 0.3);
     box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     transform: translateY(-1px);
+}
+
+.header-version .ver-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    white-space: nowrap;
+}
+
+.header-version .ver-check {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    stroke: currentColor;
+    transition: stroke 0.2s ease;
+}
+
+.header-version .ver-check polyline {
+    stroke-dasharray: 30;
+    stroke-dashoffset: 30;
+    transition: stroke-dashoffset 0.4s cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.header-version.is-latest .ver-check polyline {
+    stroke-dashoffset: 0;
+}
+
+.header-version.is-beta {
+    color: rgba(253, 224, 71, 0.95);
+    background: rgba(253, 224, 71, 0.14);
+    border-color: rgba(253, 224, 71, 0.35);
+}
+.header-version.is-beta:hover, .header-version.is-beta:active {
+    background: rgba(253, 224, 71, 0.24);
+    color: #fef08a;
+    border-color: rgba(253, 224, 71, 0.5);
+}
+
+.header-version.has-update {
+    color: #fef3c7;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.85), rgba(217, 119, 6, 0.9));
+    border-color: rgba(245, 158, 11, 0.6);
+    box-shadow: 0 0 12px rgba(245, 158, 11, 0.45);
+    animation: verPulse 2s ease-in-out infinite;
+}
+.header-version.has-update:hover, .header-version.has-update:active {
+    color: #fff;
+    background: linear-gradient(135deg, rgba(245, 158, 11, 1), rgba(217, 119, 6, 1));
+    border-color: rgba(245, 158, 11, 0.85);
+    box-shadow: 0 0 18px rgba(245, 158, 11, 0.65);
+}
+
+.header-version.is-latest {
+    color: #d1fae5;
+    background: rgba(16, 185, 129, 0.18);
+    border-color: rgba(16, 185, 129, 0.45);
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+}
+.header-version.is-latest:hover, .header-version.is-latest:active {
+    background: rgba(16, 185, 129, 0.28);
+    color: #ecfdf5;
+    border-color: rgba(16, 185, 129, 0.6);
+}
+
+.header-version.is-error {
+    color: #fee2e2;
+    background: rgba(239, 68, 68, 0.20);
+    border-color: rgba(239, 68, 68, 0.50);
+    box-shadow: 0 0 10px rgba(239, 68, 68, 0.30);
+}
+.header-version.is-error:hover, .header-version.is-error:active {
+    background: rgba(239, 68, 68, 0.30);
+    color: #fef2f2;
+    border-color: rgba(239, 68, 68, 0.65);
+}
+
+.header-version.is-beta.has-update {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.85), rgba(217, 119, 6, 0.9));
+    color: #fef3c7;
+    border-color: rgba(245, 158, 11, 0.6);
+}
+
+.header-version.is-beta.is-latest {
+    background: rgba(16, 185, 129, 0.18);
+    color: #d1fae5;
+    border-color: rgba(16, 185, 129, 0.45);
+}
+
+.header-version.is-beta.is-error {
+    background: rgba(239, 68, 68, 0.20);
+    color: #fee2e2;
+    border-color: rgba(239, 68, 68, 0.50);
+}
+
+@keyframes verPulse {
+    0%, 100% { box-shadow: 0 0 10px rgba(245, 158, 11, 0.35); }
+    50%      { box-shadow: 0 0 18px rgba(245, 158, 11, 0.75); }
 }
 
 .admin-tabs {
