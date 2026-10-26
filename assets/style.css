@@ -9,9 +9,10 @@
 html { 
     font-family: sans-serif; line-height: 1.15; -ms-text-size-adjust: 100%; -webkit-text-size-adjust: 100%; overflow-anchor: none; 
     background-color: #eef1f8;
+    overflow-x: hidden;
 }
 html[data-theme="dark"] { background-color: #121420; }
-body { margin: 0; overflow-anchor: none; }
+body { margin: 0; overflow-anchor: none; overflow-x: hidden; }
 article, aside, footer, header, nav, section { display: block; }
 h1 { font-size: 2em; margin: .67em 0; }
 figcaption, figure, main { display: block; }
@@ -801,9 +802,7 @@ html[data-theme="dark"] .footer-row-powered .footer-link:hover {
    ========================================================================== */
 .home-announcement {
     width: 100%;
-    max-width: 600px;
-    margin: 0 auto 16px;
-    padding: 0 16px;
+    margin: 0 0 16px;
     animation: homeAnnSlideDown 0.4s cubic-bezier(0.22, 1, 0.36, 1);
     position: relative;
     z-index: 12;
@@ -930,7 +929,6 @@ html[data-theme="dark"] .home-announcement-close:hover {
 @media (max-width: 600px) {
     .home-announcement {
         margin-bottom: 12px;
-        padding: 0 10px;
     }
     .home-announcement-inner {
         padding: 9px 12px;
