@@ -2571,14 +2571,55 @@
             var baseVerText = textEl.textContent; // 例如 "v1.1.3 · Beta"
             var timers = [];
             var hasCache = false;
+            var textAnimTimer = null;
+            var textFadeInTimer = null;
 
-            // 核心优化：文字淡出 -> 换字 -> 淡入。让宽度在透明期自然平滑伸缩
+            // 核心优化：先测旧宽度 -> 固定旧宽度 -> 换字 -> 测新宽度 -> 强制应用新宽度 -> 文字淡入
             function animateText(newText) {
+                if (textAnimTimer) clearTimeout(textAnimTimer);
+                if (textFadeInTimer) clearTimeout(textFadeInTimer);
+
+                // 1. 获取当前真实宽度
+                var oldWidth = btn.getBoundingClientRect().width;
+                
+                // 2. 禁用宽度过渡，瞬间固定住当前宽度
+                btn.style.transition = 'none';
+                btn.style.width = oldWidth + 'px';
+                void btn.offsetWidth; // 强制重排
+
+                // 3. 旧文字淡出
                 textEl.classList.add('fade-out');
-                timers.push(setTimeout(function () {
+                
+                textAnimTimer = setTimeout(function () {
+                    // 4. 替换文字
                     textEl.textContent = newText;
-                    textEl.classList.remove('fade-out');
-                }, 250)); // 250ms 对应 CSS 里的 opacity 过渡时间
+                    
+                    // 5. 临时设为 auto 测量新文字撑开的宽度
+                    btn.style.width = 'auto';
+                    var newWidth = btn.getBoundingClientRect().width;
+                    
+                    // 6. 重新固定回旧宽度，准备开始过渡
+                    btn.style.width = oldWidth + 'px';
+                    void btn.offsetWidth; 
+                    
+                    // 7. 恢复 CSS 的过渡属性
+                    btn.style.transition = ''; 
+                    
+                    requestAnimationFrame(function() {
+                        // 8. 触发宽度平滑过渡（长出来 / 缩回去）
+                        btn.style.width = newWidth + 'px';
+                        
+                        // 9. 等宽度伸展到一半多（350ms）时，新文字再淡入，避免被裁切
+                        textFadeInTimer = setTimeout(function() {
+                            textEl.classList.remove('fade-out');
+                        }, 350); 
+                        
+                        // 10. 动画结束后，清除行内 width，交由 CSS 自适应
+                        setTimeout(function() {
+                            btn.style.width = '';
+                        }, 500);
+                    });
+                }, 250); // 等待旧文字 250ms 淡出
             }
 
             try { hasCache = sessionStorage.getItem('nuomi_has_update') === '1'; } catch(e) {}
