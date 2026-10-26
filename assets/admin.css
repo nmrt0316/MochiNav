@@ -162,6 +162,7 @@ html[data-theme="dark"] .auth-act-btn.theme-toggle-btn:hover { background: rgba(
     cursor: pointer;
     -webkit-tap-highlight-color: transparent;
     white-space: nowrap;
+    overflow: hidden;
     border: 1px solid transparent;
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
