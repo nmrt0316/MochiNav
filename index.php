@@ -107,9 +107,6 @@ $tipsCfg = (is_array($jsonData) && isset($jsonData['tips']) && is_array($jsonDat
 
 /* ==========================================================================
    3. 站点显示配置合并
-   --------------------------------------------------------------------------
-   唯一数据源 data.json。字段为空 / 不存在时用 site_defaults() 兜底
-   （定义在 admin/defaults.php，前后台共用，无重复副本）。
    ========================================================================== */
 $siteDefaults = site_defaults();
 $siteCfg = [];
@@ -211,7 +208,6 @@ $__preloaderList = array_map(function ($p) {
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <!-- 基础 Meta 标签 -->
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no">
@@ -219,7 +215,6 @@ $__preloaderList = array_map(function ($p) {
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
     <meta name="apple-mobile-web-app-title" content="<?= htmlspecialchars($siteCfg['title']) ?>">
 
-    <!-- 主题、回访状态与硬件自适应初始化 -->
     <script>
     (function () {
         try {
@@ -253,11 +248,9 @@ $__preloaderList = array_map(function ($p) {
     })();
     </script>
 
-    <!-- 网站图标与标题 -->
     <link rel="icon" href="<?= htmlspecialchars($siteCfg['favicon']) ?>">
     <title><?= htmlspecialchars($siteCfg['pageTitle']) ?></title>
 
-    <!-- 预加载首个看板娘图片 -->
     <?php if (!empty($boardGirlPublic['enabled']) && count($boardGirlPublic['girls']) > 0): 
         $firstGirlFile = $boardGirlPublic['girls'][0]['file'] ?? '';
         if ($firstGirlFile): 
@@ -265,7 +258,6 @@ $__preloaderList = array_map(function ($p) {
     <link rel="preload" as="image" href="<?= htmlspecialchars($firstGirlFile) ?>">
     <?php endif; endif; ?>
 
-    <!-- 预下载特效和看板娘脚本 -->
     <?php foreach ($jsEffectsPublic as $eff): ?>
         <?php if (!empty($eff['loadScript'])): ?>
             <link rel="preload" as="script" href="<?= htmlspecialchars($eff['file'], ENT_QUOTES) ?>">
@@ -276,7 +268,6 @@ $__preloaderList = array_map(function ($p) {
         <link rel="preload" as="script" href="assets/mascot.js">
     <?php endif; ?>
 
-    <!-- 加载页基础结构样式 -->
     <?php if ($preloaderEnabled): ?>
     <style>
         #preloader{position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;
@@ -285,7 +276,6 @@ $__preloaderList = array_map(function ($p) {
     </style>
     <?php endif; ?>
 
-    <!-- 全局配置注入与首图预热请求 -->
     <script>
     window.NUOMI_CONFIG = {
         site: <?= json_encode($siteCfg, $__jsonFlags) ?>,
@@ -333,11 +323,9 @@ $__preloaderList = array_map(function ($p) {
     })();
     </script>
 
-    <!-- 核心样式与主逻辑 -->
     <link rel="stylesheet" href="assets/style.css">
     <script src="assets/frontend.js" defer></script>
 
-    <!-- 注入加载页主题 CSS -->
     <?php if ($preloaderEnabled): ?>
     <?php foreach ($preloadersPublic as $pre): ?>
     <script type="text/x-preloader-css" data-key="<?= htmlspecialchars($pre['key']) ?>"><?= $pre['css'] ?></script>
@@ -347,7 +335,6 @@ $__preloaderList = array_map(function ($p) {
 </head>
 <body class="<?= $preloaderEnabled ? '' : 'no-preloader' ?>">
 
-<!-- 首屏加载遮罩 -->
 <?php if ($preloaderEnabled): ?>
 <div id="preloader">
     <div class="preloader-content">
@@ -362,32 +349,28 @@ $__preloaderList = array_map(function ($p) {
 </div>
 <?php endif; ?>
 
-<!-- 动态背景图层 -->
 <div class="bg-stage">
     <div class="bg-layer bg-current" id="bgLayer1"></div>
     <div class="bg-layer bg-next" id="bgLayer2"></div>
 </div>
 
-<!-- 首页公告条 -->
-<?php if ($__latestAnn !== null): ?>
-<div class="home-announcement" id="homeAnnouncement" data-ann-id="<?= htmlspecialchars($__latestAnn['id'] ?? '') ?>">
-    <div class="home-announcement-inner">
-        <span class="home-announcement-icon">📢</span>
-        <div class="home-announcement-content">
-            <span class="home-announcement-type type-<?= htmlspecialchars($__latestAnn['type'] ?? 'info') ?>">
-                <?= htmlspecialchars(['info'=>'通知','success'=>'成功','warning'=>'警告','error'=>'错误'][$__latestAnn['type'] ?? 'info'] ?? '通知') ?>
-            </span>
-            <span class="home-announcement-title"><?= htmlspecialchars($__latestAnn['title'] ?? '') ?></span>
-        </div>
-        <a href="announcement.php" class="home-announcement-link">查看详情 →</a>
-        <button type="button" class="home-announcement-close" id="homeAnnouncementClose" title="关闭" aria-label="关闭公告">✕</button>
-    </div>
-</div>
-<?php endif; ?>
-
-<!-- 页面主体内容 -->
 <div id="app">
-    <!-- 头部区域 -->
+    <?php if ($__latestAnn !== null): ?>
+    <div class="home-announcement" id="homeAnnouncement" data-ann-id="<?= htmlspecialchars($__latestAnn['id'] ?? '') ?>">
+        <div class="home-announcement-inner">
+            <span class="home-announcement-icon">📢</span>
+            <div class="home-announcement-content">
+                <span class="home-announcement-type type-<?= htmlspecialchars($__latestAnn['type'] ?? 'info') ?>">
+                    <?= htmlspecialchars(['info'=>'通知','success'=>'成功','warning'=>'警告','error'=>'错误'][$__latestAnn['type'] ?? 'info'] ?? '通知') ?>
+                </span>
+                <span class="home-announcement-title"><?= htmlspecialchars($__latestAnn['title'] ?? '') ?></span>
+            </div>
+            <a href="announcement.php" class="home-announcement-link">查看详情 →</a>
+            <button type="button" class="home-announcement-close" id="homeAnnouncementClose" title="关闭" aria-label="关闭公告">✕</button>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="header">
         <div class="banner-container" id="bannerContainer">
             <div class="banner-layers" id="bannerLayers">
@@ -402,9 +385,7 @@ $__preloaderList = array_map(function ($p) {
         <p class="desc"><?= htmlspecialchars($siteCfg['subtitle']) ?></p>
     </div>
 
-    <!-- 核心内容区域 -->
     <div class="body">
-        <!-- 分类标签页 -->
         <div class="tab-row">
             <div class="tab-list" id="tabList">
                 <?php foreach ($categoryObjects as $i => $catObj): ?>
@@ -423,7 +404,6 @@ $__preloaderList = array_map(function ($p) {
             </div>
         </div>
 
-        <!-- 卡片列表区域 -->
         <div class="app-lists-wrap">
         <?php foreach ($categoryObjects as $i => $catObj):
             $catName = $catObj['name'];
@@ -461,7 +441,6 @@ $__preloaderList = array_map(function ($p) {
         <?php endforeach; ?>
         </div>
 
-        <!-- 底部控制按钮 -->
         <div class="control-bottom">
             <button class="ctrl-btn theme-toggle-btn" id="frontThemeBtn" title="切换主题" aria-label="切换主题">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a10 10 0 0 1 0 20z" fill="currentColor" stroke="none"/></svg>
@@ -482,56 +461,40 @@ $__preloaderList = array_map(function ($p) {
         </div>
 
         <?php
+        /* 页脚版权：允许 HTML 渲染（用户可填备案号链接等） */
         $__copyright     = trim((string)($siteCfg['copyright'] ?? ''));
-        $__githubUrl     = trim((string)($siteCfg['githubUrl'] ?? ''));
-        $__githubEnabled = ($siteCfg['githubEnabled'] ?? '1') === '1';
-        $__poweredBy     = trim((string)($siteCfg['poweredBy'] ?? ''));
-        $__poweredUrl    = trim((string)($siteCfg['poweredByUrl'] ?? ''));
+        $__hasCopyright  = ($__copyright !== '');
 
-        $__showGithub = $__githubEnabled && $__githubUrl !== '';
-        $__hasRow1    = ($__copyright !== '');
-        $__hasRow2    = ($__poweredBy !== '' || $__showGithub);
+        /* Powered by / GitHub 链接：硬编码为原作者信息，不读取 site 配置 */
+        $__poweredBy     = '糯米の引导页';
+        $__poweredUrl    = 'https://github.com/nmrt0316/MochiNav';
+        $__githubUrl     = 'https://github.com/nmrt0316';
         ?>
-        <?php if ($__hasRow1 || $__hasRow2): ?>
+        <?php if ($__hasCopyright): ?>
         <div class="footer-credit">
-            <?php if ($__hasRow1): ?>
             <div class="footer-row footer-row-main">
-                <span class="footer-copyright"><?= htmlspecialchars($__copyright) ?></span>
+                <span class="footer-copyright"><?= $__copyright /* 允许 HTML 渲染 */ ?></span>
             </div>
-            <?php endif; ?>
-            <?php if ($__hasRow2): ?>
             <div class="footer-row footer-row-powered">
-                <?php if ($__poweredBy !== ''): ?>
-                    <span class="footer-powered-prefix">Powered by</span>
-                    <?php if ($__poweredUrl !== ''): ?>
-                        <a href="<?= htmlspecialchars($__poweredUrl) ?>"
-                           target="_blank"
-                           rel="noopener noreferrer"
-                           class="footer-powered-link"><?= htmlspecialchars($__poweredBy) ?></a>
-                    <?php else: ?>
-                        <span class="footer-powered-name"><?= htmlspecialchars($__poweredBy) ?></span>
-                    <?php endif; ?>
-                <?php endif; ?>
-                <?php if ($__poweredBy !== '' && $__showGithub): ?>
-                    <span class="footer-sep" aria-hidden="true">·</span>
-                <?php endif; ?>
-                <?php if ($__showGithub): ?>
-                    <a href="<?= htmlspecialchars($__githubUrl) ?>"
-                       target="_blank"
-                       rel="noopener noreferrer"
-                       class="footer-link">
-                        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-                        <span>GitHub</span>
-                    </a>
-                <?php endif; ?>
+                <span class="footer-powered-prefix">Powered by</span>
+                <a href="<?= $__poweredUrl ?>"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="footer-powered-link"><?= $__poweredBy ?></a>
+                <span class="footer-sep" aria-hidden="true">·</span>
+                <a href="<?= $__githubUrl ?>"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="footer-link">
+                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
+                    <span>GitHub</span>
+                </a>
             </div>
-            <?php endif; ?>
         </div>
         <?php endif; ?>
     </div>
 </div>
 
-<!-- 图片预览弹窗 -->
 <div id="myModal" class="modal">
     <div class="modal-content">
         <span class="close">&times;</span>
@@ -539,7 +502,6 @@ $__preloaderList = array_map(function ($p) {
     </div>
 </div>
 
-<!-- 加载动画选择面板 -->
 <?php if ($preloaderEnabled && count($preloadersPublic) > 1): ?>
 <div class="preloader-picker" id="preloaderPicker">
     <div class="preloader-picker-title">选择加载动画</div>
@@ -558,7 +520,6 @@ $__preloaderList = array_map(function ($p) {
 </div>
 <?php endif; ?>
 
-<!-- 特效和看板娘脚本 -->
 <script>
 (function () {
     var scripts = [
@@ -606,7 +567,6 @@ $__preloaderList = array_map(function ($p) {
 })();
 </script>
 
-<!-- 全站统计代码 -->
 <?php include __DIR__ . '/analytics.php'; ?>
 </body>
 <?php ob_end_flush(); ?>
