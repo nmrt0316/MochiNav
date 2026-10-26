@@ -2,7 +2,7 @@
 
 [![Live Demo](https://img.shields.io/badge/🚀_在线演示-点击访问-blue?style=for-the-badge)](https://nmrt0316.dpdns.org)
 
-![版本](https://img.shields.io/badge/version-1.1.2-blue)
+![版本](https://img.shields.io/badge/version-1.1.2--beta-blue)
 ![PHP](https://img.shields.io/badge/PHP-7.3%2B-777bb4)
 ![License](https://img.shields.io/badge/License-MIT-green)
 
@@ -25,7 +25,7 @@
 
 ## 🔄 升级须知
 
-**当前版本：1.1.2**（版本号定义在 `admin/defaults.php` 的 `NUOMI_VERSION` 常量，后台顶部栏会自动显示）
+**当前版本：1.1.2-beta**（版本号定义在 `admin/defaults.php` 的 `NUOMI_VERSION` 常量，后台顶部栏会自动显示）
 
 覆盖新版本代码前，**必须保留**以下文件（它们是您的私有数据）：
 
@@ -120,6 +120,7 @@
 - 🔐 **安全登录**：密码哈希存储，`.admin.conf` 防直读；生产环境已关闭 `display_errors`
 - 🧭 **4 步安装向导**：管理员账号 → 站点信息 → 行为配置 → 完成预览
 - 🔄 **在线升级**（v1.1.2 独立为 `admin/updater.php`）：双通道 + GitHub Token + SHA256 校验 + 路径穿越防护 + 失败自动回滚 + 一键回滚
+- 🟢 **版本胶囊状态自检**（v1.1.2-beta）：登录后台后延迟 1.5 秒自动检查一次更新。发现新版本 → 橙色脉冲；已是最新 → 绿色 + SVG 对勾描边动画（5 秒后恢复初始）；请求异常 → 红色。**Beta 通道下版本号前自动显示淡金色 `· Beta` 标识**
 - 📋 **卡片管理**：新增、编辑、删除、拖拽排序；支持链接 / 图片两种类型
 - 🗂 **分类管理**：新增、重命名、修改图标、删除；分类下有卡片时禁止删除；支持长按拖动排序
 - 🖼 **图片管理**：上传、删除、重命名、排序、预览；**重命名自动同步卡片图标 / 弹窗大图 / 分类图标 / 站点设置**；**删除采用两层确认**
@@ -171,6 +172,7 @@
 │   ├── admin.css             # 后台样式
 │   ├── frontend.js           # 前台脚本
 │   ├── admin.js              # 后台脚本
+│   ├── updater.js            # 在线升级公共模块（v1.1.2-beta 新增）
 │   ├── mascot.js             # 看板娘 + 特效控制器
 │   ├── js/                   # JS 特效文件（自动创建）
 │   └── preloaders/           # 加载页 CSS 主题（自动创建）
@@ -275,6 +277,12 @@ location ~ ^/photos/.*\.(php|phtml|php3|php4|php5|php7|php8|phar|pl|py|jsp|asp|a
 5. **一键回滚**：升级后如有问题，点「↩ 回滚到上一版本」
 
 **v1.1.2 状态锁死修复**：只要检测到新版本且环境可写，**永远优先展示「⬆ 立即升级」按钮**，无论上次是成功、失败还是已回滚。「重新检查」和「回滚」作为次级按钮放在下方工具区。
+
+**v1.1.2-beta 首页版本胶囊自检**：登录后台后延迟 1.5 秒自动请求一次 `update_check`。
+- 发现新版本 → 胶囊变橙色并脉冲，提示可点击升级
+- 已是最新 → 胶囊变绿色并播放 SVG 对勾描边动画，5 秒后恢复初始状态
+- 请求异常 → 胶囊变红色
+- 未拿到结果前不改变胶囊颜色，避免闪烁
 
 ### 安装向导（4 步）
 1. **管理员账号**：用户名 + 密码（至少 6 位）+ 确认密码
@@ -1015,10 +1023,11 @@ echo $raw;
 
 ## 🔄 在线升级机制（v1.1.2 架构）
 
-在线升级由三部分组成：
+在线升级由四部分组成：
 
 - **`admin/update.php`**：前端页面
 - **`admin/updater.php`**（v1.1.2 新增）：后端逻辑模块，包含所有工具函数 + 5 个 API 的统一处理器
+- **`assets/updater.js`**（v1.1.2-beta 新增）：前端公共请求模块，封装 `window.NuomiUpdater.check()`
 - **`admin/.update/`**：工作目录
 
 `admin/index.php` 只在 API 路由里保留 5 个 `update_*` case，**统一委托**给 `updater_handle_action($action)`：
@@ -1033,6 +1042,16 @@ case 'update_status':
     updater_handle_action($action);
     break;
 ```
+
+`assets/updater.js` 暴露的唯一公共方法：
+
+```javascript
+window.NuomiUpdater.check({ force: false }).then(function (data) {
+    // data.ok / data.has_update / data.latest_version / data.env ...
+});
+```
+
+后台首页的版本胶囊自检与升级页的 `doCheckUpdate` 都调用同一个方法，**避免重复实现请求逻辑**。
 
 ### API 一览
 
