@@ -961,7 +961,7 @@
             }
             requestAnimationFrame(step);
         }
-        
+
         /* ======================================================================
            3.7 面板功能
            ====================================================================== */
@@ -2759,8 +2759,8 @@
             if (!btn || !textEl || !window.NuomiUpdater) return;
 
             var baseVerText = textEl.textContent; // 例如 "v1.1.3 · Beta"
+            var CACHE_KEY = 'nuomi_has_update';
             var timers = [];
-            var hasCache = false;
             var textAnimTimer = null;
             var textFadeInTimer = null;
 
@@ -2812,75 +2812,110 @@
                 }, 250); // 等待旧文字 250ms 淡出
             }
 
-            try { hasCache = sessionStorage.getItem('nuomi_has_update') === '1'; } catch(e) {}
-
-            if (hasCache) {
-                btn.classList.add('has-update');
-            } else {
-                // 1.5 秒后开始检查
-                timers.push(setTimeout(function () {
-                    btn.classList.add('is-checking');
-                    
-                    window.NuomiUpdater.check().then(function (data) {
-                        btn.classList.remove('is-checking');
-                        
-                        if (!data || !data.ok) {
-                            // 检查失败
-                            btn.classList.add('is-error');
-                            animateText('检查更新失败');
-                            
-                            timers.push(setTimeout(function () {
-                                animateText(baseVerText);
-                                timers.push(setTimeout(function () {
-                                    btn.classList.remove('is-error');
-                                }, 500)); // 文字变回后再停留 0.5s 才褪色
-                            }, 2500));
-                            return;
-                        }
-
-                        if (data.has_update) {
-                            // 发现新版本
-                            try { sessionStorage.setItem('nuomi_has_update', '1'); } catch(e) {}
-                            btn.classList.add('has-update');
-                            
-                            var latest = data.latest_version || '';
-                            animateText('发现新版本');
-                            
-                            timers.push(setTimeout(function () {
-                                animateText('最新 v' + latest);
-                                
-                                timers.push(setTimeout(function () {
-                                    animateText(baseVerText);
-                                    // 文字变回后，橙色底色和呼吸光晕永久保留
-                                }, 2500));
-                            }, 2500));
-
-                        } else {
-                            // 已是最新
-                            btn.classList.add('is-latest');
-                            animateText('已是最新版本');
-                            
-                            timers.push(setTimeout(function () {
-                                animateText(baseVerText);
-                                timers.push(setTimeout(function () {
-                                    btn.classList.remove('is-latest');
-                                }, 500)); // 文字变回后再停留 0.5s 才褪色
-                            }, 2500));
-                        }
-                    }).catch(function () {
-                        btn.classList.remove('is-checking');
-                        btn.classList.add('is-error');
-                        animateText('检查更新失败');
-                        
-                        timers.push(setTimeout(function () {
-                            animateText(baseVerText);
-                            timers.push(setTimeout(function () {
-                                btn.classList.remove('is-error');
-                            }, 500));
-                        }, 2500));
-                    });
-                }, 1500));
+            /* 缓存结构：{ version: 检查时的版本号, hasUpdate: bool, latest: 发现的最新版本号 }
+               版本号对不上 → 说明升级过了 → 缓存作废 → 重新检查 */
+            function readCache() {
+                try {
+                    var raw = sessionStorage.getItem(CACHE_KEY);
+                    if (!raw) return null;
+                    var cache = JSON.parse(raw);
+                    if (!cache || typeof cache !== 'object') return null;
+                    if (cache.version !== baseVerText) {
+                        sessionStorage.removeItem(CACHE_KEY);
+                        return null;
+                    }
+                    return cache;
+                } catch (e) {
+                    try { sessionStorage.removeItem(CACHE_KEY); } catch (e2) {}
+                    return null;
+                }
             }
+
+            function writeCache(hasUpdate, latestVersion) {
+                try {
+                    sessionStorage.setItem(CACHE_KEY, JSON.stringify({
+                        version: baseVerText,
+                        hasUpdate: !!hasUpdate,
+                        latest: latestVersion || ''
+                    }));
+                } catch (e) {}
+            }
+
+            function playHasUpdateAnimation() {
+                btn.classList.add('has-update');
+
+                var latestVersion = '';
+                var cache = readCache();
+                if (cache && cache.latest) latestVersion = cache.latest;
+
+                animateText('发现新版本');
+                timers.push(setTimeout(function () {
+                    animateText(latestVersion ? ('最新 v' + latestVersion) : '有新版本');
+                    timers.push(setTimeout(function () {
+                        animateText(baseVerText);
+                    }, 2500));
+                }, 2500));
+            }
+
+            function playIsLatestAnimation() {
+                btn.classList.add('is-latest');
+                animateText('已是最新版本');
+                timers.push(setTimeout(function () {
+                    animateText(baseVerText);
+                    timers.push(setTimeout(function () {
+                        btn.classList.remove('is-latest');
+                    }, 500));
+                }, 2500));
+            }
+
+            function playErrorAnimation() {
+                btn.classList.add('is-error');
+                animateText('检查更新失败');
+                timers.push(setTimeout(function () {
+                    animateText(baseVerText);
+                    timers.push(setTimeout(function () {
+                        btn.classList.remove('is-error');
+                    }, 500));
+                }, 2500));
+            }
+
+            var cached = readCache();
+
+            if (cached) {
+                /* 版本号一致 → 复用上次的检查结论，不发请求，避免闪烁 */
+                if (cached.hasUpdate) {
+                    playHasUpdateAnimation();
+                } else {
+                    playIsLatestAnimation();
+                }
+                return;
+            }
+
+            /* 无缓存 / 版本已变更 / 缓存损坏 → 走完整检查 */
+            timers.push(setTimeout(function () {
+                btn.classList.add('is-checking');
+
+                window.NuomiUpdater.check().then(function (data) {
+                    btn.classList.remove('is-checking');
+
+                    if (!data || !data.ok) {
+                        // 检查失败：不写缓存（下次进来仍然重新检查）
+                        playErrorAnimation();
+                        return;
+                    }
+
+                    if (data.has_update) {
+                        writeCache(true, data.latest_version || '');
+                        playHasUpdateAnimation();
+                    } else {
+                        writeCache(false, data.latest_version || '');
+                        playIsLatestAnimation();
+                    }
+                }).catch(function () {
+                    btn.classList.remove('is-checking');
+                    playErrorAnimation();
+                });
+            }, 1500));
         })();
 
     }

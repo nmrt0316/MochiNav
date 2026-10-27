@@ -1,8 +1,6 @@
 # 糯米の引导页 · 个人导航站
 
 [![Live Demo](https://img.shields.io/badge/🚀_在线演示-点击访问-blue?style=for-the-badge)](https://nmrt0316.dpdns.org)
-[![Releases](https://img.shields.io/badge/📦_最新版本-下载_releases-2ea44f?style=for-the-badge)](https://github.com/nmrt0316/MochiNav/releases)
-[![GitHub Stars](https://img.shields.io/github/stars/nmrt0316/MochiNav?style=for-the-badge&logo=github&label=Star&color=yellow)](https://github.com/nmrt0316/MochiNav/stargazers)
 
 ![版本](https://img.shields.io/badge/version-1.1.3-blue)
 ![PHP](https://img.shields.io/badge/PHP-7.3%2B-777bb4)
@@ -1134,6 +1132,79 @@ window.NuomiUpdater.check({ force: false }).then(function (data) {
 | `update_rollback` | 用最近一次备份覆盖当前代码，状态转 `rolled_back` |
 | `update_status` | 返回当前状态机、是否有可回滚备份、当前版本 |
 
+### 版本胶囊自检（防闪烁缓存机制）
+
+后台顶部栏的版本号是一个可点击的胶囊按钮。登录后台后，胶囊会延迟 **1.5 秒**自动调用一次 `update_check`，根据返回结果切换状态。
+
+**四种状态**：
+
+| 状态 | CSS 类 | 视觉 | 停留时间 |
+|---|---|---|---|
+| 检查中 | `.is-checking` | 半透明呼吸 | 直到请求完成 |
+| 有新版本 | `.has-update` | 橙色 + 脉冲光晕 | **永久保留**（直到用户升级） |
+| 已是最新 | `.is-latest` | 绿色 | 3 秒后平滑褪色 |
+| 请求异常 | `.is-error` | 红色 | 3 秒后平滑褪色 |
+
+**防闪烁缓存**：
+
+为了在刷新页面 / 切换标签页时避免重播检查动画，胶囊的检查结果会缓存在 `sessionStorage` 里：
+
+```js
+sessionStorage.setItem('nuomi_has_update', JSON.stringify({
+    version: 'v1.1.3 · Beta',   // 检查时使用的版本号
+    hasUpdate: true,             // 是否发现新版本
+    latest: '1.1.4'              // 发现的最新版本号（用于 UI 文案）
+}));
+```
+
+> **v1.1.3 修复**：早期版本只存了一个孤立布尔值 `'1'`，导致升级后重新进后台仍然显示橙色。新版本缓存带有版本号上下文，**版本变了缓存自动作废，重新走完整检查**。
+
+**决策流程**：
+
+```text
+进入后台
+   │
+   ├── 读 sessionStorage.nuomi_has_update
+   │
+   ├── 缓存不存在 / JSON 解析失败 / 版本号对不上
+   │     │
+   │     ├── 清掉坏缓存
+   │     ├── 1.5s 后发 update_check
+   │     └── 检查结果：
+   │           ├── 有新版本 → 写缓存 {version, hasUpdate: true,  latest}
+   │           │              → 胶囊橙色 + 文字轮播
+   │           ├── 已是最新 → 写缓存 {version, hasUpdate: false, latest}
+   │           │              → 胶囊绿色 3s 后褪色
+   │           └── 请求失败 → 不写缓存（下次进来仍然重新检查）
+   │                          → 胶囊红色 3s 后褪色
+   │
+   └── 缓存存在 && 版本号一致
+         │
+         ├── hasUpdate === true  → 直接亮橙色，不发请求（防闪烁）
+         │
+         └── hasUpdate === false → 直接亮绿色停留 3s 后褪色，不发请求（防闪烁）
+```
+
+**关键场景**：
+
+| 场景 | 行为 |
+|---|---|
+| 上次发现 v1.1.4 有新版本，本次仍是 v1.1.3，重新进后台 | 缓存命中版本 → 直接橙色，不发请求 |
+| **用户升级到 v1.1.4，重新进后台** | **版本号 1.1.3 ≠ 1.1.4 → 清缓存 → 完整检查 → 发现已最新 → 绿色** |
+| 首次进后台 / 缓存被清掉 | 缓存不存在 → 完整检查 |
+| 缓存被改坏（JSON 非法） | 显式清掉坏缓存 → 完整检查 |
+| 检查失败 | **不写缓存**（避免下次误用错误结论） |
+
+**为什么用 `sessionStorage` 而不是 `localStorage`**：`sessionStorage` 是标签页级别的，关掉标签页就清空。用户同时开多个后台标签页时，每个标签页独立维护自己的检查状态，不会互相干扰；用户升级后关掉旧标签页开新的，天然会重新检查。
+
+**验证方式**（想确认修复生效时）：
+
+1. 升级到新版本（`NUOMI_VERSION` 常量变化）
+2. 关掉当前后台标签页，重新打开 `/admin`
+3. 预期：1.5s 检查动画 → 绿色「已是最新版本」→ 3s 后褪色回版本号
+
+若仍显示橙色，F12 检查 `sessionStorage.nuomi_has_update` 里的 `version` 字段是否为旧版本号。若是旧的，说明 `NUOMI_VERSION` 没改，`baseVerText` 没变，缓存被判定为「版本一致」而继续复用。
+
 ### 状态机
 
 ```text
@@ -1213,6 +1284,10 @@ if (!defined('UPDATE_GITHUB_REPO')) {
 
 ---
 
-如果这个项目对你有帮助，欢迎 Star ⭐
+<div align="center">
 
-[![Star](https://img.shields.io/github/stars/nmrt0316/MochiNav?style=social)](https://github.com/nmrt0316/MochiNav/stargazers)
+**如果这个项目对你有帮助，欢迎点个 Star ⭐**
+
+[![GitHub Stars](https://img.shields.io/github/stars/nmrt0316/MochiNav?style=for-the-badge&logo=github&label=Star&color=yellow)](https://github.com/nmrt0316/MochiNav/stargazers)
+
+</div>
