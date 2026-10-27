@@ -114,14 +114,40 @@ if (is_array($jsonData) && isset($jsonData['site']) && is_array($jsonData['site'
     $siteCfg = $jsonData['site'];
 }
 foreach ($siteDefaults as $k => $v) {
+    if (is_array($v)) continue;
     if (!array_key_exists($k, $siteCfg) || trim((string)$siteCfg[$k]) === '') {
         $siteCfg[$k] = $v;
     }
+}
+if (!isset($siteCfg['searchEngines']) || !is_array($siteCfg['searchEngines']) || count($siteCfg['searchEngines']) === 0) {
+    $siteCfg['searchEngines'] = $siteDefaults['searchEngines'];
 }
 
 unset($siteCfg['analyticsCode']);
 $preloaderEnabled = !isset($siteCfg['preloader']) || $siteCfg['preloader'] !== '0';
 $__jsonFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG;
+
+/* ==========================================================================
+   3.0 搜索配置解析
+   ========================================================================== */
+$searchEnabled = isset($siteCfg['searchEnabled']) && $siteCfg['searchEnabled'] === '1';
+$searchEngines = [];
+foreach ($siteCfg['searchEngines'] as $eng) {
+    if (!is_array($eng)) continue;
+    $engKey  = isset($eng['key'])  ? trim((string)$eng['key'])  : '';
+    $engName = isset($eng['name']) ? trim((string)$eng['name']) : '';
+    $engUrl  = isset($eng['url'])  ? trim((string)$eng['url'])  : '';
+    if ($engKey === '' || $engName === '') continue;
+    if ($engKey !== 'local' && $engUrl === '') continue;
+    $searchEngines[] = ['key' => $engKey, 'name' => $engName, 'url' => $engUrl];
+}
+if (count($searchEngines) === 0) {
+    $searchEngines = $siteDefaults['searchEngines'];
+}
+$searchDefaultEngine = isset($siteCfg['searchDefaultEngine']) ? (string)$siteCfg['searchDefaultEngine'] : 'local';
+if (!in_array($searchDefaultEngine, array_column($searchEngines, 'key'), true)) {
+    $searchDefaultEngine = $searchEngines[0]['key'];
+}
 
 /* ==========================================================================
    3.1 最新一条启用的公告（用于首页公告条）
@@ -284,6 +310,11 @@ $__preloaderList = array_map(function ($p) {
         tips: <?= json_encode($tipsCfg, $__jsonFlags) ?>,
         localBg:     <?= json_encode($localBgCfg, $__jsonFlags) ?>,
         localBanner: <?= json_encode($localBannerCfg, $__jsonFlags) ?>,
+        search: <?= json_encode([
+            'enabled'       => $searchEnabled,
+            'defaultEngine' => $searchDefaultEngine,
+            'engines'       => $searchEngines,
+        ], $__jsonFlags) ?>,
         preloaders: {
             defaultKey: <?= json_encode($defaultStyleKey, $__jsonFlags) ?>,
             list: <?= json_encode($__preloaderList, $__jsonFlags) ?>
@@ -385,6 +416,37 @@ $__preloaderList = array_map(function ($p) {
         <p class="desc"><?= htmlspecialchars($siteCfg['subtitle']) ?></p>
     </div>
 
+    <?php if ($searchEnabled): ?>
+    <div class="search-wrap" id="searchWrap">
+        <div class="search-bar" id="searchBar">
+            <button type="button" class="search-trigger" id="searchTrigger" aria-label="打开搜索">
+                <svg class="search-trigger-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="7"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <span class="search-trigger-text">搜索</span>
+            </button>
+            <div class="search-panel" id="searchPanel">
+                <select class="search-engine" id="searchEngine" aria-label="搜索引擎">
+                    <?php foreach ($searchEngines as $eng): ?>
+                    <option value="<?= htmlspecialchars($eng['key']) ?>"<?= $eng['key'] === $searchDefaultEngine ? ' selected' : '' ?>><?= htmlspecialchars($eng['name']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+                <input type="text" class="search-input" id="searchInput" placeholder="搜索卡片或输入关键词…" autocomplete="off" spellcheck="false">
+                <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 10 4 15 9 20"></polyline>
+                        <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <div class="search-dropdown" id="searchDropdown">
+            <div class="search-dropdown-list" id="searchDropdownList"></div>
+        </div>
+    </div>
+    <?php endif; ?>
+
     <div class="body">
         <div class="tab-row">
             <div class="tab-list" id="tabList">
@@ -415,9 +477,9 @@ $__preloaderList = array_map(function ($p) {
                         $escSub   = htmlspecialchars($card['sub']  ?? '', ENT_QUOTES);
                     ?>
                         <?php if (($card['type'] ?? 'link') === 'image'): ?>
-                            <a href="javascript:void(0)" class="item card-item" data-type="image" data-image="<?= htmlspecialchars($card['image'] ?? '') ?>" data-tooltip-title="<?= $escTitle ?>" data-tooltip-sub="<?= $escSub ?>">
+                            <a href="javascript:void(0)" class="item card-item" data-type="image" data-image="<?= htmlspecialchars($card['image'] ?? '') ?>" data-tooltip-title="<?= $escTitle ?>" data-tooltip-sub="<?= $escSub ?>" data-category="<?= htmlspecialchars($catName, ENT_QUOTES) ?>">
                         <?php else: ?>
-                            <a href="<?= htmlspecialchars($card['href'] ?? 'javascript:void(0)') ?>" class="item card-item" data-type="link" target="_blank" rel="noopener" data-tooltip-title="<?= $escTitle ?>" data-tooltip-sub="<?= $escSub ?>">
+                            <a href="<?= htmlspecialchars($card['href'] ?? 'javascript:void(0)') ?>" class="item card-item" data-type="link" target="_blank" rel="noopener" data-tooltip-title="<?= $escTitle ?>" data-tooltip-sub="<?= $escSub ?>" data-category="<?= htmlspecialchars($catName, ENT_QUOTES) ?>">
                         <?php endif; ?>
                             <div class="content-wrap">
                                 <div class="img-wrap">

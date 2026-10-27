@@ -25,11 +25,49 @@
   - 请求异常 → 胶囊附加 `.is-error`，红色停留 3 秒后平滑褪色，文字提示 `检查更新失败`。
 - **Beta 通道视觉标识**：当 `NUOMI_VERSION` 常量包含 `beta` 字样时，胶囊自动剥离后缀显示为 `v1.1.3 · Beta`，且常态底色为透明淡蓝色（正式版为半透明白）。
 - **防刷新闪烁机制**：利用 `sessionStorage` 记录检查结果，刷新页面时如果是“有新版”状态，直接亮起橙色，不再重播检查动画。
+- **前台站内搜索框**：标题下方默认收起为「🔍 搜索」胶囊，点击弹性展开为完整搜索栏（参考灵动岛交互）。
+  - **本地卡片模式**：实时匹配卡片名称 / 副标题 / 分类，浮层下拉展示跨分类结果，支持 ↑↓ 选择 + 回车打开。
+  - **外部搜索引擎模式**：内置必应 / 谷歌 / 百度，回车或点击提交按钮在新标签页打开。
+  - **半透明毛玻璃质感**：`rgba(255,255,255,0.48)` 起，展开态加深到 0.62，跟随深色模式自动切换 `rgba(34,40,56,0.55)` / `0.72`。
+  - **胶囊弹性展开**：宽度 + 布局双过渡，`cubic-bezier(0.34, 1.56, 0.64, 1)` 缓动。
+  - **快捷交互**：`/` 一键展开并聚焦（输入框未聚焦时）；Esc 收起并清空；点击外部自动收起。
+  - **SVG 图标体系**：放大镜、回车图标全部 SVG 线条，与现有 `.ctrl-btn` 体系风格统一，不使用 emoji。
+  - **移动端占满整行**：`.search-wrap.is-expanded .search-bar` 在 ≤600px 断点下宽度 100%。
+- **后台外观配色预设**：「站点设置 → 🎨 外观」提供 5 套配色（紫罗兰 / 樱花粉 / 薄荷绿 / 晨曦橙 / 天空蓝），浅色 + 深色模式各一套色板，一键切换、实时预览，立即生效。
+  - 数据存 `site.adminBgPreset`，默认 `violet`。
+  - 通过 `html[data-bg-preset]` 属性选择器切换 CSS 变量 `--bg-body-gradient-1` / `--bg-body-gradient-2`。
+  - 同时作用于登录页、后台主界面、在线升级页。
+- **站点设置新增 🎨 外观子标签页**：与「🏠 前台」「🛠 后台」并列，专门承载后台外观配置。
+- **站点设置 → 前台 → 🔍 搜索框配置区**：启用开关 / 默认引擎 / 引擎列表（可增删、可自定义名称和 URL）。
+  - `key === "local"` 为内置引擎，不可删除，URL 恒空。
+  - 其它引擎 URL 必须 `http(s)://` 开头，支持末尾拼接关键词或 `{q}` 占位符。
+- **`admin/defaults.php` 新增 `admin_bg_presets()` 函数**：返回 5 套配色预设的权威数据，前后台共用。
 
 ### 变更
 - **`admin/update.php` 重构**：删除内联的 API 请求代码，`doCheckUpdate` 改为调用 `window.NuomiUpdater.check()`，与后台首页共用同一套请求逻辑；「重新检查更新」按钮由 emoji 改为 SVG 图标。
 - **平滑动效重构**：版本号胶囊的宽度变化、底色渐变、文字切换（交叉淡入淡出）全部交由 CSS `transition` 处理。
 - **移动端 UI 调整**：移除手机端主题切换按钮的 `32px` 缩小限制，全平台统一保持 `38px`。
+- **首页公告条层级提升**：`z-index` 从 `12` 提升到 **`10000`**，永远盖住天气等第三方悬浮组件（天气 `z-index: 9999`）。公告条关闭后，天气自动露出。
+- **`#app` 的 `z-index` 由 `11` 改为 `auto`**：解除 `#app` 的 stacking context 约束，使公告条可以跳出 `#app` 内部层级，直接与外部悬浮组件竞争。
+- **首页公告条关闭动画重构**：从「瞬间 `removeChild` 抽走空间」改为「**外层 `max-height` + `margin-bottom` 平滑收缩（400ms）+ 内层同步滑走淡出**」，下方内容是跟着缓动平滑上移，不再突兀跳动。
+  - 外层 `overflow: hidden; transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.4s, opacity 0.32s`。
+  - 内层 `transform: translateY(-12px)` 同步滑走。
+  - JS `removeChild` 延后到 420ms，此时公告条高度已为 0，删除不会有视觉变化。
+- **`admin/defaults.php` 新增字段**：`searchEnabled` / `searchDefaultEngine` / `searchEngines` / `adminBgPreset`。
+- **`admin/index.php` 新增逻辑**：`normalize_search_engines()` 归一化搜索引擎列表（去重、校验 key 格式、剔除非法 URL、保证 local 引擎存在）；搜索配置与 `adminBgPreset` 的保存逻辑；搜索配置和配色预设的 HTML 渲染。
+- **`index.php` 新增逻辑**：搜索配置解析（`$searchEnabled` / `$searchEngines` / `$searchDefaultEngine`），`NUOMI_CONFIG` 注入 `search` 配置块，搜索框骨架 HTML 输出（仅在 `searchEnabled === '1'` 时）。
+- **`admin/data.json` 搜索配置结构**：`site.searchEngines` 为 `[{key, name, url}, ...]` 数组，`site.searchDefaultEngine` 为默认引擎的 `key`。
+
+### 修复
+- **公告条关闭时下方内容突兀跳动**：`removeChild` 时机与动画脱节导致空间瞬间抽走。改为高度 + margin 同步收缩，动画结束后再 `removeChild`。
+- **`#app` 层级隔离导致公告条无法盖住天气**：`#app` 的 `z-index: 11` 建立了独立 stacking context，内部元素无论 z-index 多大都无法突破 `#app` 的层。改为 `auto` 后，公告条的 `z-index: 10000` 才能真正生效。
+- **`site_defaults()` 中 `searchEngines` 数组字段在前台合并时被 `trim((string)$v)` 触发 warning**：改为「数组字段跳过 trim 兜底，单独判断处理」。
+
+### 安全
+- **搜索配置 URL 校验**：外部引擎 URL 必须 `http(s)://` 开头，`admin/index.php` 的 `normalize_search_engines()` 会剔除非法 URL。
+- **搜索引擎 key 正则校验**：仅允许 `[a-z0-9_-]{1,32}`，防止注入。
+- **`adminBgPreset` 白名单校验**：只接受 `admin_bg_presets()` 里存在的 key，非法值自动回退 `violet`。
+- **前台搜索框结果渲染转义**：搜索结果卡片名称 / 副标题 / 分类通过 `escapeHtml()` 转义，关键词高亮只包 `<mark>` 标签，不引入 XSS 风险。
 
 ---
 
@@ -54,7 +92,7 @@
   - 绝对保护：`admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/` 下普通图片。
 
 ### 修复
-- **在线升级状态锁死**：修复"失败"或"已回滚"状态下升级按钮被锁死、必须手动删 `state.json` 才能重试的问题。现在只要检测到新版本且环境允许，永远优先展示「⬆ 立即升级」按钮；「重新检查」和「回滚」作为次级按钮放在下方工具区。
+- **在线升级状态锁死**：修复“失败”或“已回滚”状态下升级按钮被锁死、必须手动删 `state.json` 才能重试的问题。现在只要检测到新版本且环境允许，永远优先展示「⬆ 立即升级」按钮；「重新检查」和「回滚」作为次级按钮放在下方工具区。
 - **升级页浅色模式对比度**：`.update-action-tip` 文字加深为 `#4b5563`，`.update-warning` 文字加深为 `#78350f`。
 - **前台横向溢出**：`html` 与 `body` 加 `overflow-x: hidden`，防止天气等第三方组件撑破页面。
 - **前台公告条宽度**：`.home-announcement` 去掉固定 `max-width` 与左右 padding，自适应 `#app` 内部宽度。

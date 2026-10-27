@@ -961,7 +961,7 @@
             }
             requestAnimationFrame(step);
         }
-
+        
         /* ======================================================================
            3.7 面板功能
            ====================================================================== */
@@ -2446,7 +2446,7 @@
         })();
 
         /* ------------------------------------------------------------
-           3.7.10 站点设置
+           3.7.10 站点设置（含搜索配置 + 外观预设）
            ------------------------------------------------------------ */
         $all('.pick-site-avatar').forEach(function (btn) { btn.addEventListener('click', function () { photoPickTarget = 'siteAvatar'; openPhotoModal(); }); });
         $all('.pick-admin-avatar').forEach(function (btn) { btn.addEventListener('click', function () { photoPickTarget = 'adminAvatar'; openPhotoModal(); }); });
@@ -2457,6 +2457,196 @@
         if (adminAvatarInput) { adminAvatarInput.addEventListener('input', function () { updateSiteAvatarPreview('adminAvatarInput', 'adminAvatarPreviewWrap', 'adminAvatarPreviewImg'); }); updateSiteAvatarPreview('adminAvatarInput', 'adminAvatarPreviewWrap', 'adminAvatarPreviewImg'); }
         var siteFaviconInput = $('#siteFaviconInput');
         if (siteFaviconInput) { siteFaviconInput.addEventListener('input', function () { updateFaviconPreview('siteFaviconInput', 'siteFaviconPreviewWrap', 'siteFaviconPreviewImg'); }); updateFaviconPreview('siteFaviconInput', 'siteFaviconPreviewWrap', 'siteFaviconPreviewImg'); }
+
+        /* 搜索引擎列表：动态增删 + 提交时序列化到 FormData */
+        (function () {
+            var listEl = document.getElementById('searchEngineList');
+            var addBtn = document.getElementById('addSearchEngineBtn');
+            var form   = document.getElementById('siteForm');
+            if (!listEl || !form) return;
+
+            function buildEngineItem(key, name, url, isLocal) {
+                var item = document.createElement('div');
+                item.className = 'search-engine-item';
+                item.dataset.key = key || '';
+                item.dataset.local = isLocal ? '1' : '0';
+
+                var fields = document.createElement('div');
+                fields.className = 'search-engine-fields';
+
+                var nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.className = 'search-engine-name';
+                nameInput.placeholder = '引擎名称';
+                nameInput.maxLength = 20;
+                nameInput.value = name || '';
+                fields.appendChild(nameInput);
+
+                var urlInput = document.createElement('input');
+                urlInput.type = 'text';
+                urlInput.className = 'search-engine-url';
+                urlInput.placeholder = 'https://example.com/search?q=';
+                urlInput.maxLength = 300;
+                urlInput.value = url || '';
+                if (isLocal) urlInput.disabled = true;
+                fields.appendChild(urlInput);
+
+                item.appendChild(fields);
+
+                if (isLocal) {
+                    var lock = document.createElement('span');
+                    lock.className = 'search-engine-lock';
+                    lock.title = '内置引擎不可删除';
+                    lock.textContent = '🔒';
+                    item.appendChild(lock);
+                } else {
+                    var del = document.createElement('button');
+                    del.type = 'button';
+                    del.className = 'btn btn-sm search-engine-del';
+                    del.title = '删除';
+                    del.textContent = '✕';
+                    del.addEventListener('click', function () { item.parentNode.removeChild(item); });
+                    item.appendChild(del);
+                }
+
+                return item;
+            }
+
+            if (addBtn) {
+                addBtn.addEventListener('click', function () {
+                    var newKey = 'eng_' + Math.random().toString(36).slice(2, 8);
+                    var item = buildEngineItem(newKey, '', '', false);
+                    listEl.appendChild(item);
+                    var nameInput = item.querySelector('.search-engine-name');
+                    if (nameInput) nameInput.focus();
+                });
+            }
+
+            function serializeEngines() {
+                var arr = [];
+                var items = listEl.querySelectorAll('.search-engine-item');
+                for (var i = 0; i < items.length; i++) {
+                    var item = items[i];
+                    var key = (item.dataset.key || '').trim();
+                    var nameEl = item.querySelector('.search-engine-name');
+                    var urlEl = item.querySelector('.search-engine-url');
+                    var name = nameEl ? nameEl.value.trim() : '';
+                    var url = urlEl ? urlEl.value.trim() : '';
+                    if (!name) continue;
+                    if (key !== 'local' && !/^https?:\/\//i.test(url)) continue;
+                    arr.push({ key: key, name: name, url: url });
+                }
+                return arr;
+            }
+
+            /* 用新节点替换旧 siteForm，清空 bindAuthForm 已绑定的 submit 事件，
+               再绑定带搜索引擎序列化的自定义提交，避免重复提交。 */
+            var fresh = form.cloneNode(true);
+            form.parentNode.replaceChild(fresh, form);
+            form = fresh;
+
+            /* 重建后，为克隆出来的按钮与输入框重新绑定事件 */
+            $all('.pick-site-avatar', form).forEach(function (btn) { btn.addEventListener('click', function () { photoPickTarget = 'siteAvatar'; openPhotoModal(); }); });
+            $all('.pick-site-favicon', form).forEach(function (btn) { btn.addEventListener('click', function () { photoPickTarget = 'siteFavicon'; openPhotoModal(); }); });
+
+            var newSiteFaviconInput = form.querySelector('#siteFaviconInput');
+            if (newSiteFaviconInput) {
+                newSiteFaviconInput.addEventListener('input', function () { updateFaviconPreview('siteFaviconInput', 'siteFaviconPreviewWrap', 'siteFaviconPreviewImg'); });
+                updateFaviconPreview('siteFaviconInput', 'siteFaviconPreviewWrap', 'siteFaviconPreviewImg');
+            }
+            var newSiteAvatarInput = form.querySelector('#siteAvatarInput');
+            if (newSiteAvatarInput) {
+                newSiteAvatarInput.addEventListener('input', function () { updateSiteAvatarPreview('siteAvatarInput', 'siteAvatarPreviewWrap', 'siteAvatarPreviewImg'); });
+                updateSiteAvatarPreview('siteAvatarInput', 'siteAvatarPreviewWrap', 'siteAvatarPreviewImg');
+            }
+
+            /* 重建后新增的搜索引擎项和删除按钮需要重新绑定 */
+            listEl = form.querySelector('#searchEngineList');
+            if (listEl) {
+                listEl.querySelectorAll('.search-engine-del').forEach(function (del) {
+                    del.addEventListener('click', function () {
+                        var item = del.closest('.search-engine-item');
+                        if (item && item.parentNode) item.parentNode.removeChild(item);
+                    });
+                });
+            }
+            var newAddBtn = form.querySelector('#addSearchEngineBtn');
+            if (newAddBtn) {
+                newAddBtn.addEventListener('click', function () {
+                    var newKey = 'eng_' + Math.random().toString(36).slice(2, 8);
+                    var item = buildEngineItem(newKey, '', '', false);
+                    if (listEl) listEl.appendChild(item);
+                    var nameInput = item.querySelector('.search-engine-name');
+                    if (nameInput) nameInput.focus();
+                });
+            }
+
+            /* 复选框 -> 1/0 */
+            var searchToggle = form.querySelector('#searchEnabledToggle');
+            if (searchToggle) {
+                searchToggle.addEventListener('change', function () {
+                    searchToggle.value = searchToggle.checked ? '1' : '0';
+                });
+            }
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                var btn = form.querySelector('button[type=submit]');
+                var old = btn.textContent; btn.disabled = true; btn.textContent = '保存中…';
+
+                try {
+                    var fd = new FormData(form);
+                    fd.append('searchEngines', JSON.stringify(serializeEngines()));
+                    if (searchToggle) fd.set('searchEnabled', searchToggle.checked ? '1' : '0');
+                    var data = await api('save_site', fd);
+                    if (!data.ok) { toast(data.msg || '操作失败', 'error'); return; }
+                    smoothReload('前台设置已保存，正在刷新...');
+                } catch (err) {
+                    toast(err.message, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = old;
+                }
+            });
+        })();
+
+        /* 外观预设切换 */
+        (function () {
+            var form = document.getElementById('appearanceForm');
+            if (!form) return;
+
+            var cards = form.querySelectorAll('.bg-preset-card');
+            cards.forEach(function (card) {
+                var radio = card.querySelector('input[type=radio]');
+                if (!radio) return;
+                card.addEventListener('click', function (e) {
+                    if (e.target === radio) return;
+                    e.preventDefault();
+                    radio.checked = true;
+                    cards.forEach(function (c) { c.classList.toggle('is-active', c === card); });
+                });
+                if (radio.checked) card.classList.add('is-active');
+            });
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                var btn = form.querySelector('button[type=submit]');
+                var old = btn.textContent; btn.disabled = true; btn.textContent = '保存中…';
+                try {
+                    var checked = form.querySelector('input[name="adminBgPreset"]:checked');
+                    if (!checked) { toast('请选择一个配色方案', 'error'); return; }
+                    var fd = new FormData();
+                    fd.append('adminBgPreset', checked.value);
+                    var data = await api('save_site', fd);
+                    if (!data.ok) { toast(data.msg || '操作失败', 'error'); return; }
+                    document.documentElement.setAttribute('data-bg-preset', checked.value);
+                    smoothReload('外观已保存，正在刷新...');
+                } catch (err) {
+                    toast(err.message, 'error');
+                } finally {
+                    btn.disabled = false; btn.textContent = old;
+                }
+            });
+        })();
 
         /* ------------------------------------------------------------
            3.7.11 备份恢复

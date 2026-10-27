@@ -66,6 +66,20 @@ html[data-theme="dark"] {
     --scrollbar-thumb-hover: rgba(255, 255, 255, 0.45);
 }
 
+/* 后台背景配色预设（浅色模式） */
+html[data-theme="light"][data-bg-preset="violet"]  { --bg-body-gradient-1: #667eea; --bg-body-gradient-2: #764ba2; }
+html[data-theme="light"][data-bg-preset="sakura"]  { --bg-body-gradient-1: #f8a5c2; --bg-body-gradient-2: #e58dbb; }
+html[data-theme="light"][data-bg-preset="mint"]    { --bg-body-gradient-1: #a8e6cf; --bg-body-gradient-2: #7fd8be; }
+html[data-theme="light"][data-bg-preset="sunrise"] { --bg-body-gradient-1: #ffb88c; --bg-body-gradient-2: #f78fb3; }
+html[data-theme="light"][data-bg-preset="sky"]     { --bg-body-gradient-1: #a1c4fd; --bg-body-gradient-2: #c2e9fb; }
+
+/* 后台背景配色预设（深色模式） */
+html[data-theme="dark"][data-bg-preset="violet"]  { --bg-body-gradient-1: #1a1a2e; --bg-body-gradient-2: #16213e; }
+html[data-theme="dark"][data-bg-preset="sakura"]  { --bg-body-gradient-1: #1a1520; --bg-body-gradient-2: #2d1b2e; }
+html[data-theme="dark"][data-bg-preset="mint"]    { --bg-body-gradient-1: #0f2027; --bg-body-gradient-2: #203a43; }
+html[data-theme="dark"][data-bg-preset="sunrise"] { --bg-body-gradient-1: #2b1810; --bg-body-gradient-2: #3d1f1a; }
+html[data-theme="dark"][data-bg-preset="sky"]     { --bg-body-gradient-1: #1e1b4b; --bg-body-gradient-2: #2d1b69; }
+
 /* ==========================================================================
    2. 基础重置与工具类 (Reset & Utilities)
    ========================================================================== */
@@ -1595,7 +1609,214 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
 }
 
 /* ==========================================================================
-   26. 响应式媒体查询 (Media Queries)
+   26. 搜索引擎列表（站点设置 → 前台）
+   ========================================================================== */
+.search-engine-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.search-engine-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: var(--bg-chip);
+    border: 1px solid var(--border-normal);
+    border-radius: 10px;
+    transition: border-color .18s ease, background-color .18s ease;
+}
+.search-engine-item:focus-within {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.04);
+}
+html[data-theme="dark"] .search-engine-item:focus-within {
+    background: rgba(120, 150, 230, 0.10);
+}
+.search-engine-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 110px) 1fr;
+    gap: 8px;
+    min-width: 0;
+}
+.search-engine-name,
+.search-engine-url {
+    width: 100%;
+    border: 1px solid var(--border-normal);
+    background: var(--bg-input);
+    color: var(--text-main);
+    border-radius: 8px;
+    padding: 7px 10px;
+    font-size: 13px;
+    outline: none;
+    box-sizing: border-box;
+    transition: border-color .2s ease, box-shadow .2s ease;
+    min-width: 0;
+}
+.search-engine-name:focus,
+.search-engine-url:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, .12);
+}
+html[data-theme="dark"] .search-engine-name:focus,
+html[data-theme="dark"] .search-engine-url:focus {
+    box-shadow: 0 0 0 3px rgba(120, 150, 230, .20);
+}
+.search-engine-url:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: var(--bg-chip);
+}
+.search-engine-del {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: #f56c6c;
+    background: rgba(245, 108, 108, 0.10);
+    border: 1px solid rgba(245, 108, 108, 0.25);
+    box-shadow: none;
+    transition: background-color .18s ease, border-color .18s ease;
+}
+.search-engine-del:hover {
+    background: rgba(245, 108, 108, 0.20);
+    border-color: rgba(245, 108, 108, 0.45);
+    box-shadow: none;
+}
+.search-engine-del:active {
+    transform: scale(0.92);
+}
+.search-engine-lock {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    opacity: 0.7;
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* ==========================================================================
+   27. 外观配色预设卡片（站点设置 → 外观）
+   ========================================================================== */
+.bg-preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 4px;
+}
+.bg-preset-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    background: var(--bg-chip);
+    border: 1.5px solid transparent;
+    border-radius: 12px;
+    cursor: pointer;
+    position: relative;
+    user-select: none;
+    -webkit-user-select: none;
+    transition:
+        border-color .22s ease,
+        background-color .22s ease,
+        transform .2s cubic-bezier(0.34, 1.56, 0.64, 1),
+        box-shadow .25s ease;
+}
+.bg-preset-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px var(--shadow-card);
+}
+.bg-preset-card:active {
+    transform: translateY(0) scale(0.985);
+}
+.bg-preset-card input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.bg-preset-card.is-active {
+    border-color: #667eea;
+    background: rgba(102, 126, 234, 0.08);
+    box-shadow: 0 4px 14px rgba(102, 126, 234, 0.18);
+}
+html[data-theme="dark"] .bg-preset-card.is-active {
+    background: rgba(120, 150, 230, 0.14);
+    border-color: #7c8ef5;
+    box-shadow: 0 4px 14px rgba(120, 150, 230, 0.30);
+}
+.bg-preset-preview {
+    position: relative;
+    width: 100%;
+    height: 64px;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+.bg-preset-preview-dark {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+}
+.bg-preset-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-main);
+    text-align: center;
+    line-height: 1.4;
+    transition: color .22s ease;
+}
+.bg-preset-card.is-active .bg-preset-name {
+    color: #667eea;
+    font-weight: 600;
+}
+html[data-theme="dark"] .bg-preset-card.is-active .bg-preset-name {
+    color: #a5b4fc;
+}
+.bg-preset-check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #667eea;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    line-height: 1;
+    opacity: 0;
+    transform: scale(0.5);
+    transition:
+        opacity .22s ease,
+        transform .3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.40);
+}
+.bg-preset-card.is-active .bg-preset-check {
+    opacity: 1;
+    transform: scale(1);
+}
+html[data-theme="dark"] .bg-preset-check {
+    background: #7c8ef5;
+}
+
+/* ==========================================================================
+   28. 响应式媒体查询 (Media Queries)
    ========================================================================== */
 @media (max-width: 480px) { .type-switch-3 .type-btn { font-size: 12px; padding: 8px 4px; } }
 @media (orientation: landscape) and (min-width: 641px) {
@@ -1720,19 +1941,48 @@ html[data-theme="dark"] .announcement-type-error   { background: rgba(239, 68, 6
     .footer-locked-tip {
         font-size: 11.5px;
     }
+
+    /* 搜索引擎列表移动端布局 */
+    .search-engine-fields {
+        grid-template-columns: 1fr;
+    }
+    .search-engine-item {
+        flex-wrap: wrap;
+    }
+    .search-engine-fields {
+        width: 100%;
+        order: 1;
+    }
+    .search-engine-item .search-engine-del,
+    .search-engine-item .search-engine-lock {
+        order: 2;
+        margin-left: auto;
+    }
+
+    /* 配色预设：2 列 */
+    .bg-preset-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    .bg-preset-preview {
+        height: 56px;
+    }
+    .bg-preset-name {
+        font-size: 12.5px;
+    }
 }
 
 /* ==========================================================================
-   27. 在线升级页样式 (Online Upgrade Page)
+   29. 在线升级页样式 (Online Upgrade Page)
    ========================================================================== */
 .update-page {
     padding: 0;
     min-height: 100vh;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, var(--bg-body-gradient-1) 0%, var(--bg-body-gradient-2) 100%);
     background-attachment: fixed;
 }
 html[data-theme="dark"] .update-page {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    background: linear-gradient(135deg, var(--bg-body-gradient-1) 0%, var(--bg-body-gradient-2) 100%);
 }
 
 .update-container {

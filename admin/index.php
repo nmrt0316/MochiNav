@@ -207,6 +207,33 @@ function normalize_ua_templates($arr) {
     return $out;
 }
 
+function normalize_search_engines($arr) {
+    $defaults = site_defaults();
+    if (!is_array($arr)) return $defaults['searchEngines'];
+
+    $out  = [];
+    $seen = [];
+    foreach ($arr as $e) {
+        if (!is_array($e)) continue;
+        $key  = strtolower(trim((string)($e['key']  ?? '')));
+        $name = trim((string)($e['name'] ?? ''));
+        $url  = trim((string)($e['url']  ?? ''));
+        if ($key === '' || $name === '') continue;
+        if (!preg_match('/^[a-z0-9_\-]{1,32}$/', $key)) continue;
+        if (isset($seen[$key])) continue;
+        if ($key !== 'local' && !preg_match('#^https?://#i', $url)) continue;
+        $seen[$key] = true;
+        $out[] = ['key' => $key, 'name' => $name, 'url' => $url];
+    }
+    if (count($out) === 0) return $defaults['searchEngines'];
+
+    $hasLocal = false;
+    foreach ($out as $e) { if ($e['key'] === 'local') { $hasLocal = true; break; } }
+    if (!$hasLocal) array_unshift($out, ['key' => 'local', 'name' => '本地卡片', 'url' => '']);
+
+    return $out;
+}
+
 function find_ua_template($templates, $id) {
     if (!is_array($templates) || $id === '') return null;
     foreach ($templates as $t) {
@@ -336,7 +363,21 @@ function normalize_data($data) {
 
     if (!isset($data['site']) || !is_array($data['site'])) $data['site'] = [];
     foreach (site_defaults() as $k => $v) {
+        if (is_array($v)) continue;
         if (!array_key_exists($k, $data['site'])) $data['site'][$k] = $v;
+    }
+
+    /* 搜索配置归一化 */
+    $data['site']['searchEngines'] = normalize_search_engines($data['site']['searchEngines'] ?? []);
+    if (!in_array($data['site']['searchEnabled'] ?? '', ['0', '1'], true)) {
+        $data['site']['searchEnabled'] = '1';
+    }
+    $__validEngineKeys = array_column($data['site']['searchEngines'], 'key');
+    if (!in_array($data['site']['searchDefaultEngine'] ?? '', $__validEngineKeys, true)) {
+        $data['site']['searchDefaultEngine'] = $__validEngineKeys[0] ?? 'local';
+    }
+    if (!isset($data['site']['adminBgPreset']) || !isset(admin_bg_presets()[$data['site']['adminBgPreset']])) {
+        $data['site']['adminBgPreset'] = 'violet';
     }
 
     if (!isset($data['tips']) || !is_array($data['tips'])) {
@@ -2451,6 +2492,31 @@ if ($action !== '') {
                 $data['site']['updateChannel'] = $ch;
             }
 
+            /* 搜索配置保存 */
+            if (array_key_exists('searchEnabled', $_POST)) {
+                $data['site']['searchEnabled'] = $_POST['searchEnabled'] === '1' ? '1' : '0';
+            }
+            if (array_key_exists('searchEngines', $_POST)) {
+                $rawEng = $_POST['searchEngines'];
+                $engArr = is_string($rawEng) ? json_decode($rawEng, true) : $rawEng;
+                $data['site']['searchEngines'] = normalize_search_engines($engArr);
+            }
+            if (array_key_exists('searchDefaultEngine', $_POST)) {
+                $data['site']['searchDefaultEngine'] = trim((string)$_POST['searchDefaultEngine']);
+            }
+            $__validEngineKeys = array_column($data['site']['searchEngines'], 'key');
+            if (!in_array($data['site']['searchDefaultEngine'] ?? '', $__validEngineKeys, true)) {
+                $data['site']['searchDefaultEngine'] = $__validEngineKeys[0] ?? 'local';
+            }
+
+            /* 后台外观预设 */
+            if (array_key_exists('adminBgPreset', $_POST)) {
+                $preset = trim((string)$_POST['adminBgPreset']);
+                if (isset(admin_bg_presets()[$preset])) {
+                    $data['site']['adminBgPreset'] = $preset;
+                }
+            }
+
             foreach (['localBgPriority', 'localBannerPriority'] as $pk) {
                 if (isset($data['site'][$pk]) && !in_array($data['site'][$pk], ['api', 'local'], true)) {
                     $data['site'][$pk] = 'api';
@@ -2829,9 +2895,13 @@ $rawJson = $rawData !== false ? json_decode($rawData, true) : null;
 if (is_array($rawJson)) {
     if (isset($rawJson['site']) && is_array($rawJson['site'])) {
         foreach (site_defaults() as $k => $v) {
+            if (is_array($v)) continue;
             if (isset($rawJson['site'][$k]) && trim((string)$rawJson['site'][$k]) !== '') {
                 $siteCfg[$k] = $rawJson['site'][$k];
             }
+        }
+        if (isset($rawJson['site']['searchEngines']) && is_array($rawJson['site']['searchEngines'])) {
+            $siteCfg['searchEngines'] = normalize_search_engines($rawJson['site']['searchEngines']);
         }
     }
     if (isset($rawJson['tips']) && is_array($rawJson['tips'])) {
@@ -2849,6 +2919,15 @@ if (is_array($rawJson)) {
             $tipsCfg['texts'] = tips_defaults()['texts'];
         }
     }
+}
+
+if (!isset($siteCfg['searchEngines']) || !is_array($siteCfg['searchEngines']) || count($siteCfg['searchEngines']) === 0) {
+    $siteCfg['searchEngines'] = site_defaults()['searchEngines'];
+} else {
+    $siteCfg['searchEngines'] = normalize_search_engines($siteCfg['searchEngines']);
+}
+if (!isset($siteCfg['adminBgPreset']) || !isset(admin_bg_presets()[$siteCfg['adminBgPreset']])) {
+    $siteCfg['adminBgPreset'] = 'violet';
 }
 
 $adminPreloaders = [];
@@ -2901,9 +2980,16 @@ if (stripos($ver_text, '-beta') !== false) {
 }
 $display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
 
+/* 后台外观预设的数据准备（供 HTML 渲染使用） */
+$__bgPresets = admin_bg_presets();
+$__currentPreset = $siteCfg['adminBgPreset'] ?? 'violet';
+
+/* 搜索配置的数据准备（供 HTML 渲染使用） */
+$searchEnginesCfg = $siteCfg['searchEngines'];
 ?>
+
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-bg-preset="<?= e($siteCfg['adminBgPreset'] ?? 'violet') ?>">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
@@ -3803,6 +3889,7 @@ $display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
             <div class="sub-tabs">
                 <button type="button" class="btn sub-tab-btn is-active" data-subtab="site-front">🏠 前台</button>
                 <button type="button" class="btn sub-tab-btn" data-subtab="site-admin">🛠 后台</button>
+                <button type="button" class="btn sub-tab-btn" data-subtab="site-appearance">🎨 外观</button>
             </div>
         </div>
 
@@ -3849,6 +3936,50 @@ $display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
                             <input type="number" name="adminClickWindow" value="<?= e($siteCfg['adminClickWindow']) ?>" min="1" max="60" step="0.5" placeholder="默认 10，范围 1~60">
                             <span class="small muted">只统计该时间窗口内的点击，超时自动清零，默认 10 秒。</span>
                         </label>
+
+                        <div class="form-group-title">🔍 搜索框</div>
+
+                        <div class="footer-switch-row">
+                            <div class="footer-switch-text">
+                                <div class="footer-switch-title">启用前台搜索框</div>
+                                <div class="small muted">开启后前台会显示搜索框，支持本地卡片搜索与外部搜索引擎</div>
+                            </div>
+                            <label class="switch-mini" style="flex-shrink:0;">
+                                <input type="checkbox" id="searchEnabledToggle" name="searchEnabled" value="1" <?= (($siteCfg['searchEnabled'] ?? '1') === '1') ? 'checked' : '' ?>>
+                                <span class="slider-mini"></span>
+                            </label>
+                        </div>
+
+                        <label>默认搜索引擎
+                            <select name="searchDefaultEngine" id="searchDefaultEngineSelect">
+                                <?php foreach ($searchEnginesCfg as $eng): ?>
+                                    <option value="<?= e($eng['key']) ?>"<?= ($siteCfg['searchDefaultEngine'] ?? 'local') === $eng['key'] ? ' selected' : '' ?>><?= e($eng['name']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                            <span class="small muted">用户打开搜索时默认选中的引擎。</span>
+                        </label>
+
+                        <div class="form-label" style="margin-top:14px;">搜索引擎列表</div>
+                        <p class="small muted" style="margin-top:-6px;margin-bottom:10px;">「本地卡片」为固定内置引擎，不可删除；其它引擎可自由增删。</p>
+                        <div class="search-engine-list" id="searchEngineList">
+                            <?php foreach ($searchEnginesCfg as $eng):
+                                $isLocal = ($eng['key'] === 'local');
+                            ?>
+                                <div class="search-engine-item" data-key="<?= e($eng['key']) ?>" data-local="<?= $isLocal ? '1' : '0' ?>">
+                                    <div class="search-engine-fields">
+                                        <input type="text" class="search-engine-name" placeholder="引擎名称" value="<?= e($eng['name']) ?>" maxlength="20">
+                                        <input type="text" class="search-engine-url" placeholder="https://example.com/search?q=" value="<?= e($eng['url']) ?>" maxlength="300"<?= $isLocal ? ' disabled' : '' ?>>
+                                    </div>
+                                    <?php if (!$isLocal): ?>
+                                        <button type="button" class="btn btn-sm search-engine-del" title="删除">✕</button>
+                                    <?php else: ?>
+                                        <span class="search-engine-lock" title="内置引擎不可删除">🔒</span>
+                                    <?php endif; ?>
+                                </div>
+                            <?php endforeach; ?>
+                        </div>
+                        <button type="button" class="btn btn-sm" id="addSearchEngineBtn" style="margin-top:10px;">＋ 添加引擎</button>
+                        <p class="small muted" style="margin-top:8px;">外部引擎的 URL 会把 <code>{q}</code> 或末尾自动拼接关键词作为查询参数。例如 <code>https://www.bing.com/search?q=</code>。</p>
 
                         <div class="form-group-title">🔗 页脚信息</div>
 
@@ -3938,6 +4069,32 @@ $display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
                             <span class="small muted">stable：只检查 GitHub 上最新发布的正式版。beta：会取 Releases 列表第一条，包含预发布版本。切换通道后升级页会自动重新检查。</span>
                         </label>
                         <button type="submit" class="btn btn-primary">保存后台设置</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="sub-tab-panel" id="subtab-site-appearance">
+            <div class="backup-cards">
+                <div class="backup-card">
+                    <div class="backup-title">🎨 后台背景配色</div>
+                    <p class="muted small" style="margin-bottom:14px;">选择一套后台界面的背景渐变配色，深浅色模式下会自动使用对应色板。切换会立即生效并保存。</p>
+                    <form id="appearanceForm" class="auth-form" autocomplete="off">
+                        <div class="bg-preset-grid">
+                            <?php foreach ($__bgPresets as $presetKey => $preset):
+                                $isActive = ($presetKey === $__currentPreset);
+                            ?>
+                                <label class="bg-preset-card<?= $isActive ? ' is-active' : '' ?>" data-preset="<?= e($presetKey) ?>">
+                                    <input type="radio" name="adminBgPreset" value="<?= e($presetKey) ?>" <?= $isActive ? 'checked' : '' ?>>
+                                    <div class="bg-preset-preview" style="background: linear-gradient(135deg, <?= e($preset['light'][0]) ?> 0%, <?= e($preset['light'][1]) ?> 100%);">
+                                        <div class="bg-preset-preview-dark" style="background: linear-gradient(135deg, <?= e($preset['dark'][0]) ?> 0%, <?= e($preset['dark'][1]) ?> 100%);"></div>
+                                    </div>
+                                    <div class="bg-preset-name"><?= e($preset['name']) ?></div>
+                                    <span class="bg-preset-check">✓</span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                        <button type="submit" class="btn btn-primary" style="margin-top:16px;">保存外观设置</button>
                     </form>
                 </div>
             </div>
@@ -4095,6 +4252,18 @@ $display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
             </div>
 
             <div class="backup-card">
+                <div class="backup-title">🔍 搜索框</div>
+                <ul class="help-list">
+                    <li>开启后前台会在标题下方显示「搜索」胶囊，点击后弹性展开为完整搜索栏。</li>
+                    <li><b>本地卡片</b>模式：实时匹配卡片名称 / 副标题 / 分类，浮层下拉展示跨分类结果，支持 ↑↓ 选择 + 回车打开。</li>
+                    <li><b>外部引擎</b>模式（必应 / 谷歌 / 百度等）：回车或点击提交按钮，在新标签页打开搜索结果。</li>
+                    <li>「本地卡片」为固定内置引擎不可删除；其它引擎可自由增删、自定义名称和 URL。</li>
+                    <li>按 <code>/</code> 可快速展开搜索（输入框聚焦时不触发）。</li>
+                    <li>普通快捷键：<code>Esc</code> 收起搜索框并清空下拉。</li>
+                </ul>
+            </div>
+
+            <div class="backup-card">
                 <div class="backup-title">📢 公告管理</div>
                 <ul class="help-list">
                     <li>公告会显示在站内公告页 <code>/announcement.php</code>，404 页的「查看公告」按钮会跳转到该页。</li>
@@ -4118,17 +4287,19 @@ $display_ver = 'v' . $ver_text . ($is_beta ? ' · Beta' : '');
                 <div class="backup-title">⚙ 站点设置</div>
                 <ul class="help-list">
                     <li><b>前台</b>：标题、头像、favicon、进入后台的连点次数/时间窗口。</li>
+                    <li><b>前台</b>：搜索框启用 / 默认引擎 / 引擎列表。</li>
                     <li><b>前台</b>：背景与 Banner 的 API、轮播间隔、缓存池上限。</li>
                     <li><b>前台</b>：页脚版权信息（支持 HTML）。</li>
                     <li><b>后台</b>：登录页头像、标题、副标题、标签标题、顶部栏文字。</li>
                     <li><b>后台</b>：GitHub Token（可选，用于提升 API 限额）与更新通道（stable / beta）。</li>
+                    <li><b>外观</b>：后台界面背景配色预设。</li>
                 </ul>
             </div>
 
             <div class="backup-card">
                 <div class="backup-title">💾 备份恢复</div>
                 <ul class="help-list">
-                    <li><b>导出</b>：下载完整 data.json 备份（含卡片、分类、特效、看板娘、语录、站点设置、统计代码、公告）。</li>
+                    <li><b>导出</b>：下载完整 data.json 备份（含卡片、分类、特效、看板娘、语录、站点设置、统计代码、公告、搜索配置）。</li>
                     <li><b>导入</b>：完整覆盖当前数据，操作前建议先导出。</li>
                     <li><b>清除数据</b>：
                         <br>① 指定内容：只清勾选的模块；

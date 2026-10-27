@@ -4,7 +4,7 @@
    ========================================================================== */
 
 if (!defined('NUOMI_VERSION')) {
-    define('NUOMI_VERSION', '1.1.3-beta.1');
+    define('NUOMI_VERSION', '1.1.3-beta.2');
 }
 
 if (!defined('UPDATE_GITHUB_REPO')) {
@@ -60,6 +60,15 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
                 'githubEnabled'       => '1',
                 'githubToken'         => '',
                 'updateChannel'       => 'stable',
+                'adminBgPreset'       => 'violet',
+                'searchEnabled'       => '1',
+                'searchDefaultEngine' => 'local',
+                'searchEngines'       => [
+                    ['key' => 'local',  'name' => '本地卡片', 'url' => ''],
+                    ['key' => 'bing',   'name' => '必应',     'url' => 'https://www.bing.com/search?q='],
+                    ['key' => 'google', 'name' => '谷歌',     'url' => 'https://www.google.com/search?q='],
+                    ['key' => 'baidu',  'name' => '百度',     'url' => 'https://www.baidu.com/s?wd='],
+                ],
             ];
         }
     }
@@ -88,6 +97,18 @@ if (!defined('NUOMI_DEFAULTS_LOADED')) {
                 ],
                 'api'      => '',
                 'apiField' => 'text'
+            ];
+        }
+    }
+
+    if (!function_exists('admin_bg_presets')) {
+        function admin_bg_presets() {
+            return [
+                'violet'    => ['name' => '紫罗兰',   'light' => ['#667eea', '#764ba2'], 'dark' => ['#1a1a2e', '#16213e']],
+                'sakura'    => ['name' => '樱花粉',   'light' => ['#f8a5c2', '#e58dbb'], 'dark' => ['#1a1520', '#2d1b2e']],
+                'mint'      => ['name' => '薄荷绿',   'light' => ['#a8e6cf', '#7fd8be'], 'dark' => ['#0f2027', '#203a43']],
+                'sunrise'   => ['name' => '晨曦橙',   'light' => ['#ffb88c', '#f78fb3'], 'dark' => ['#2b1810', '#3d1f1a']],
+                'sky'       => ['name' => '天空蓝',   'light' => ['#a1c4fd', '#c2e9fb'], 'dark' => ['#1e1b4b', '#2d1b69']],
             ];
         }
     }
