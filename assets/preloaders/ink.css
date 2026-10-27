@@ -1,0 +1,121 @@
+/* @name 水墨 */
+/* @description 宣纸底 + 墨迹晕染 + 毛笔字样标题 */
+
+#preloader { background: #f6f2e8; }
+html[data-theme="dark"] #preloader { background: #14161a; }
+
+#preloader::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle,
+        rgba(0, 0, 0, 0.10) 0%,
+        rgba(0, 0, 0, 0.04) 35%,
+        transparent 70%);
+    filter: blur(30px);
+    pointer-events: none;
+    animation: inkBreath 5s ease-in-out infinite;
+}
+html[data-theme="dark"] #preloader::before {
+    background: radial-gradient(circle,
+        rgba(200, 200, 210, 0.08) 0%,
+        rgba(200, 200, 210, 0.03) 35%,
+        transparent 70%);
+}
+@keyframes inkBreath {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.85; }
+    50%      { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+
+.preloader-content { gap: 30px; }
+
+.preloader-avatar {
+    width: 86px; height: 86px;
+    opacity: 0;
+    transform: scale(0.92);
+    animation: inkAvatarIn 1.1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    box-shadow:
+        0 0 0 1px rgba(0, 0, 0, 0.12),
+        0 8px 26px rgba(0, 0, 0, 0.14),
+        0 20px 50px rgba(0, 0, 0, 0.10);
+    filter: grayscale(0.15);
+}
+html[data-theme="dark"] .preloader-avatar {
+    box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.08),
+        0 8px 26px rgba(0, 0, 0, 0.55),
+        0 20px 50px rgba(0, 0, 0, 0.35);
+}
+.preloader-avatar::before {
+    content: '';
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.10);
+    animation: inkRipple 3.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+    pointer-events: none;
+}
+html[data-theme="dark"] .preloader-avatar::before { border-color: rgba(255, 255, 255, 0.10); }
+@keyframes inkAvatarIn {
+    0%   { opacity: 0; transform: scale(0.92); filter: grayscale(0.15) blur(6px); }
+    100% { opacity: 1; transform: scale(1);    filter: grayscale(0.15) blur(0); }
+}
+@keyframes inkRipple {
+    0%   { transform: scale(1);   opacity: 0.5; }
+    75%  { transform: scale(1.6); opacity: 0; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
+.preloader-title {
+    font-family: "Songti SC", "STSong", "SimSun", "PingFang SC", serif;
+    font-size: 20px;
+    font-weight: 400;
+    color: #2b2b2b;
+    line-height: 1.4;
+    opacity: 0;
+    letter-spacing: 0.5em;
+    padding-left: 0.5em;
+    transform: translateY(4px);
+    filter: blur(8px);
+    animation: inkTitleIn 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+}
+html[data-theme="dark"] .preloader-title { color: #d8d8dc; }
+@keyframes inkTitleIn {
+    0%   { opacity: 0; letter-spacing: 0.9em; padding-left: 0.9em; filter: blur(8px); transform: translateY(4px); }
+    100% { opacity: 1; letter-spacing: 0.5em; padding-left: 0.5em; filter: blur(0);   transform: translateY(0); }
+}
+
+.preloader-progress {
+    width: 200px; height: 1px;
+    background: rgba(0, 0, 0, 0.08);
+    opacity: 0;
+    animation: inkBarFadeIn 0.9s ease 0.7s forwards;
+}
+html[data-theme="dark"] .preloader-progress { background: rgba(255, 255, 255, 0.10); }
+.preloader-progress-bar {
+    height: 100%; width: 0;
+    background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.35) 30%, rgba(0, 0, 0, 0.75) 100%);
+    transition: width 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+html[data-theme="dark"] .preloader-progress-bar {
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.35) 30%, rgba(255, 255, 255, 0.85) 100%);
+}
+@keyframes inkBarFadeIn { to { opacity: 1; } }
+
+html.revisit #preloader .preloader-progress { display: none; }
+
+#preloader.is-revisit .preloader-avatar::before {
+    animation: inkRipple 2.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+#preloader.is-revisit .preloader-avatar::after {
+    content: '';
+    position: absolute; inset: -20px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 60%, rgba(0, 0, 0, 0.06) 78%, transparent 100%);
+    animation: inkBreath 3s ease-in-out infinite;
+    pointer-events: none;
+}
+html[data-theme="dark"] #preloader.is-revisit .preloader-avatar::after {
+    background: radial-gradient(circle, transparent 60%, rgba(255, 255, 255, 0.08) 78%, transparent 100%);
+}

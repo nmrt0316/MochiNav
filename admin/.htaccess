@@ -1,0 +1,20 @@
+# ============================================
+# 糯米の引导页 - 后台目录保护
+# 防止 .admin.conf / data.json 被直接下载
+# ============================================
+
+# 禁止目录列表（用 IfModule 包裹，避免 AllowOverride 未开 Options 时报 500）
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>
+
+# 保护敏感文件：配置文件、数据文件、备份、日志、Markdown
+<FilesMatch "\.(conf|json|bak|tmp|log|md)$">
+    <IfModule mod_authz_core.c>
+        Require all denied
+    </IfModule>
+    <IfModule !mod_authz_core.c>
+        Order allow,deny
+        Deny from all
+    </IfModule>
+</FilesMatch>

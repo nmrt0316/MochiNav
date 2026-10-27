@@ -1,0 +1,154 @@
+/* @name 自然 */
+/* @description 森林绿底 + 有机呼吸 + 叶脉光晕 + 清新进度条 */
+
+#preloader {
+    background: linear-gradient(160deg, #f0f7f0 0%, #e5f2e5 50%, #d8ecd8 100%);
+}
+html[data-theme="dark"] #preloader {
+    background: linear-gradient(160deg, #0a1410 0%, #101c16 50%, #0c1610 100%);
+}
+
+#preloader::before {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 640px; height: 640px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle,
+        rgba(80, 180, 120, 0.14) 0%,
+        rgba(80, 180, 120, 0.05) 40%,
+        transparent 72%);
+    filter: blur(30px);
+    pointer-events: none;
+    animation: ntBreath 5s ease-in-out infinite;
+}
+html[data-theme="dark"] #preloader::before {
+    background: radial-gradient(circle,
+        rgba(80, 180, 120, 0.12) 0%,
+        rgba(80, 180, 120, 0.04) 40%,
+        transparent 72%);
+}
+@keyframes ntBreath {
+    0%, 100% { transform: translate(-50%, -50%) scale(1);    opacity: 0.85; }
+    50%      { transform: translate(-50%, -50%) scale(1.12); opacity: 1; }
+}
+
+.preloader-content { gap: 30px; }
+
+.preloader-avatar {
+    width: 86px; height: 86px;
+    opacity: 0;
+    transform: scale(0.9);
+    animation: ntAvatarIn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.1s forwards;
+    box-shadow:
+        0 0 0 2px rgba(255, 255, 255, 0.95),
+        0 0 0 6px rgba(80, 180, 120, 0.25),
+        0 10px 28px rgba(60, 140, 90, 0.22),
+        0 0 60px rgba(80, 180, 120, 0.22);
+}
+html[data-theme="dark"] .preloader-avatar {
+    box-shadow:
+        0 0 0 2px rgba(20, 40, 30, 0.9),
+        0 0 0 6px rgba(80, 180, 120, 0.15),
+        0 10px 28px rgba(0, 0, 0, 0.45),
+        0 0 60px rgba(80, 180, 120, 0.20);
+}
+@keyframes ntAvatarIn {
+    0%   { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.preloader-avatar::before {
+    content: '';
+    position: absolute; inset: -12px;
+    border-radius: 50%;
+    background: radial-gradient(circle, transparent 55%, rgba(80, 180, 120, 0.25) 78%, transparent 100%);
+    animation: ntHalo 3.2s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes ntHalo {
+    0%, 100% { opacity: 0.6; transform: scale(1); }
+    50%      { opacity: 1;   transform: scale(1.08); }
+}
+
+.preloader-avatar::after {
+    content: '';
+    position: absolute; inset: -6px;
+    border-radius: 50%;
+    border: 1.5px dashed rgba(80, 180, 120, 0.45);
+    animation: ntRingSpin 18s linear infinite;
+    pointer-events: none;
+}
+@keyframes ntRingSpin { to { transform: rotate(360deg); } }
+
+.preloader-title {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Helvetica Neue", sans-serif;
+    font-size: 19px;
+    font-weight: 400;
+    color: #2d5039;
+    line-height: 1.4;
+    opacity: 0;
+    letter-spacing: 0.25em;
+    padding-left: 0.25em;
+    text-shadow: 0 2px 12px rgba(80, 180, 120, 0.30);
+    filter: blur(5px);
+    transform: translateY(4px);
+    animation: ntTitleIn 1.3s cubic-bezier(0.22, 1, 0.36, 1) 0.4s forwards;
+}
+html[data-theme="dark"] .preloader-title {
+    color: #a8d8b0;
+    text-shadow: 0 2px 12px rgba(80, 180, 120, 0.35);
+}
+@keyframes ntTitleIn {
+    0%   { opacity: 0; letter-spacing: 0.5em; padding-left: 0.5em; filter: blur(5px); transform: translateY(4px); }
+    100% { opacity: 1; letter-spacing: 0.25em; padding-left: 0.25em; filter: blur(0);   transform: translateY(0); }
+}
+
+.preloader-progress {
+    width: 210px; height: 3px;
+    border-radius: 2px;
+    background: rgba(80, 180, 120, 0.15);
+    opacity: 0;
+    overflow: visible;
+    animation: ntBarFadeIn 0.8s ease 0.7s forwards;
+}
+html[data-theme="dark"] .preloader-progress { background: rgba(80, 180, 120, 0.12); }
+.preloader-progress-bar {
+    height: 100%; width: 0;
+    border-radius: 2px;
+    background: linear-gradient(90deg,
+        rgba(80, 180, 120, 0.4),
+        #5cc484,
+        #34a853,
+        #1e8f47);
+    box-shadow: 0 0 14px rgba(80, 180, 120, 0.65);
+    transition: width 1s cubic-bezier(0.22, 1, 0.36, 1);
+    position: relative;
+}
+.preloader-progress-bar::after {
+    content: '';
+    position: absolute; right: 0; top: 50%;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #ffffff;
+    transform: translate(50%, -50%);
+    box-shadow:
+        0 0 8px 2px rgba(80, 200, 120, 1),
+        0 0 16px 5px rgba(60, 170, 100, 0.6);
+    animation: ntDotPulse 1.8s ease-in-out infinite;
+}
+@keyframes ntDotPulse {
+    0%, 100% { transform: translate(50%, -50%) scale(1); }
+    50%      { transform: translate(50%, -50%) scale(1.4); }
+}
+@keyframes ntBarFadeIn { to { opacity: 1; } }
+
+html.revisit #preloader .preloader-progress { display: none; }
+
+#preloader.is-revisit .preloader-avatar::before {
+    animation: ntHalo 2.4s ease-in-out infinite;
+}
+#preloader.is-revisit .preloader-avatar::after {
+    border-style: dotted;
+    animation: ntRingSpin 8s linear infinite;
+}

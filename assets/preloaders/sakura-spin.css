@@ -1,0 +1,56 @@
+/* @name 樱花旋转 */
+/* @description 樱花旋转 + 呼吸缩放 + 花瓣错拍闪烁 */
+
+#preloader {
+    background-color: #f8c3cd !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+/* 隐藏原版里面多余的文字、进度条和图片 */
+#preloader .preloader-title,
+#preloader .preloader-progress,
+#preloader .preloader-avatar img {
+    display: none !important;
+}
+
+/* 用外层容器做 10 秒整体旋转 */
+#preloader .preloader-content {
+    display: block !important;
+    position: relative !important;
+    width: 80px !important;
+    height: 80px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    transform-origin: center center !important;
+    animation: sakuraSpin 10s linear infinite !important;
+}
+
+/* 用内层容器做 3 秒呼吸缩放，并加载底图 */
+#preloader .preloader-avatar {
+    display: block !important;
+    width: 80px !important;
+    height: 80px !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA4MCA4MCI+PHBhdGggZD0iTTUyLDE2LjRjLTEtOC04LTEyLTgtMTJsLTQsMmwtNC0yYzAsMC03LDQtOCwxMmMtMC40LDMuMiwxLDcsMiw5LjFjMi4xLDQuNCw2LjQsNy45LDEwLDEwLjljMy42LTMsNy45LTYuNiwxMC0xMC45QzUxLDIzLjQsNTIuNCwxOS43LDUyLDE2LjR6IiBmaWxsPSIjRkNGQ0ZDIj48YW5pbWF0ZSBhdHRyaWJ1dGVUeXBlPSJYTUwiIGF0dHJpYnV0ZU5hbWU9Im9wYWNpdHkiIHZhbHVlcz0iMDsxOzE7MTsxOzE7MDswOzA7MCIgZHVyPSI1cyIgY2FsY01vZGU9ImRpc2NyZXRlIiBiZWdpbj0iMHMiIHJlcGVhdENvdW50PSJpbmRlZmluaXRlIj48L2FuaW1hdGU+PC9wYXRoPjxwYXRoIGQ9Ik01MiwxNi40Yy0xLTgtOC0xMi04LTEybC00LDJsLTQtMmMwLDAtNyw0LTgsMTJjLTAuNCwzLjIsMSw3LDIsOS4xYzIuMSw0LjQsNi40LDcuOSwxMCwxMC45YzMuNi0zLDcuOS02LjYsMTAtMTAuOUM1MSwyMy40LDUyLjQsMTkuNyw1MiwxNi40eiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkNGQ0ZDIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS13aWR0aD0iMS4xIj48L3BhdGg+PHBhdGggZD0iTTc0LjIsMzEuM2wwLjctNC40YzAsMC02LTUuNC0xMy45LTMuOWMtMy4yLDAuNi02LjMsMy4xLTgsNC43Yy0zLjUsMy40LTUuNiw4LjUtNy4zLDEyLjljNCwyLjUsOC43LDUuNSwxMy41LDYuMWMyLjMsMC4zLDYuMywwLjUsOS4yLTAuOWM3LjMtMy40LDguOS0xMS4zLDguOS0xMS4zTDc0LjIsMzEuM3oiIGZpbGw9IiNGQ0ZDRkMiPjxhbmltYXRlIGF0dHJpYnV0ZVR5cGU9IlhNTCIgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIwOzE7MTsxOzE7MTswOzA7MDswIiBkdXI9IjVzIiBjYWxjTW9kZT0iZGlzY3JldGUiIGJlZ2luPSIwLjVzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSI+PC9hbmltYXRlPjwvcGF0aD48cGF0aCBkPSJNNzQuMiwzMS4zbDAuNy00LjRjMCwwLTYtNS40LTEzLjktMy45Yy0zLjIsMC42LTYuMywzLjEtOCw0LjdjLTMuNSwzLjQtNS42LDguNS03LjMsMTIuOWM0LDIuNSw4LjcsNS41LDEzLjUsNi4xYzIuMywwLjMsNi4zLDAuNSw5LjItMC45YzcuMy0zLjQsOC45LTExLjMsOC45LTExLjNMNzQuMiwzMS4zeiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkNGQ0ZDIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS13aWR0aD0iMS4xIj48L3BhdGg+PHBhdGggZD0iTTY1LDU2LjRjLTEuNi0yLjktNC45LTUuMS02LjktNi4yYy00LjMtMi4zLTkuOC0yLjctMTQuNS0zYy0xLjIsNC42LTIuNSw5LjktMS43LDE0LjdjMC40LDIuMiwxLjUsNi4xLDMuNyw4LjVjNS41LDUuOSwxMy41LDUsMTMuNSw1bDIuMS00bDQuNC0wLjdDNjUuNiw3MC44LDY4LjksNjMuNSw2NSw1Ni40eiIgZmlsbD0iI0ZDRkNGQyI+PGFuaW1hdGUgYXR0cmlidXRlVHlwZT0iWE1MIiBhdHRyaWJ1dGVOYW1lPSJvcGFjaXR5IiB2YWx1ZXM9IjA7MTsxOzE7MTsxOzA7MDswOzAiIGR1cj0iNXMiIGNhbGNNb2RlPSJkaXNjcmV0ZSIgYmVnaW49IjFzIiByZXBlYXRDb3VudD0iaW5kZWZpbml0ZSI+PC9hbmltYXRlPjwvcGF0aD48cGF0aCBkPSJNNjUsNTYuNGMtMS42LTIuOS00LjktNS4xLTYuOS02LjJjLTQuMy0yLjMtOS44LTIuNy0xNC41LTNjLTEuMiw0LjYtMi41LDkuOS0xLjcsMTQuN2MwLjQsMi4yLDEuNSw2LjEsMy43LDguNWM1LjUsNS45LDEzLjUsNSwxMy41LDVsMi4xLTRsNC40LTAuN0M2NS42LDcwLjgsNjguOSw2My41LDY1LDU2LjR6IiBmaWxsPSJub25lIiBzdHJva2U9IiNGQ0ZDRkMiIHN0cm9rZS1taXRlcmxpbWl0PSIxMCIgc3Ryb2tlLXdpZHRoPSIxLjEiPjwvcGF0aD48cGF0aCBkPSJNMzYuNSw0Ny4zYy00LjcsMC4zLTEwLjIsMC43LTE0LjUsM2MtMiwxLjEtNS40LDMuMy02LjksNi4yYy0zLjksNy4xLTAuNiwxNC40LTAuNiwxNC40bDQuNCwwLjdsMi4xLDRjMCwwLDgsMC45LDEzLjUtNWMyLjItMi40LDMuMy02LjMsMy43LTguNUMzOSw1Ny4yLDM3LjYsNTEuOSwzNi41LDQ3LjN6IiBmaWxsPSIjRkNGQ0ZDIj48YW5pbWF0ZSBhdHRyaWJ1dGVUeXBlPSJYTUwiIGF0dHJpYnV0ZU5hbWU9Im9wYWNpdHkiIHZhbHVlcz0iMDsxOzE7MTsxOzE7MDswOzA7MCIgZHVyPSI1cyIgY2FsY01vZGU9ImRpc2NyZXRlIiBiZWdpbj0iMS41cyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiPjwvYW5pbWF0ZT48L3BhdGg+PHBhdGggZD0iTTM2LjUsNDcuM2MtNC43LDAuMy0xMC4yLDAuNy0xNC41LDNjLTIsMS4xLTUuNCwzLjMtNi45LDYuMmMtMy45LDcuMS0wLjYsMTQuNC0wLjYsMTQuNGw0LjQsMC43bDIuMSw0YzAsMCw4LDAuOSwxMy41LTVjMi4yLTIuNCwzLjMtNi4zLDMuNy04LjVDMzksNTcuMiwzNy42LDUxLjksMzYuNSw0Ny4zeiIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjRkNGQ0ZDIiBzdHJva2UtbWl0ZXJsaW1pdD0iMTAiIHN0cm9rZS13aWR0aD0iMS4xIj48L3BhdGg+PHBhdGggZD0iTTI3LDI3LjdjLTEuNi0xLjYtNC44LTQuMS04LTQuN2MtNy45LTEuNS0xMy45LDMuOS0xMy45LDMuOWwwLjcsNC40bC0zLjEsMy4yYzAsMCwxLjYsNy45LDguOSwxMS4zYzMsMS40LDcsMS4yLDkuMiwwLjljNC44LTAuNyw5LjUtMy42LDEzLjUtNi4xQzMyLjUsMzYuMiwzMC41LDMxLjEsMjcsMjcuN3oiIGZpbGw9IiNGQ0ZDRkMiPjxhbmltYXRlIGF0dHJpYnV0ZVR5cGU9IlhNTCIgYXR0cmlidXRlTmFtZT0ib3BhY2l0eSIgdmFsdWVzPSIwOzE7MTsxOzE7MTswOzA7MDswIiBkdXI9IjVzIiBjYWxjTW9kZT0iZGlzY3JldGUiIGJlZ2luPSIycyIgcmVwZWF0Q291bnQ9ImluZGVmaW5pdGUiPjwvYW5pbWF0ZT48L3BhdGg+PHBhdGggZD0iTTI3LDI3LjdjLTEuNi0xLjYtNC44LTQuMS04LTQuN2MtNy45LTEuNS0xMy45LDMuOS0xMy45LDMuOWwwLjcsNC40bC0zLjEsMy4yYzAsMCwxLjYsNy45LDguOSwxMS4zYzMsMS40LDcsMS4yLDkuMiwwLjljNC44LTAuNyw5LjUtMy42LDEzLjUtNi4xQzMyLjUsMzYuMiwzMC41LDMxLjEsMjcsMjcuN3oiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI0ZDRkNGQyIgc3Ryb2tlLW1pdGVybGltaXQ9IjEwIiBzdHJva2Utd2lkdGg9IjEuMSI+PC9wYXRoPjwvc3ZnPg==") !important;
+    background-size: contain !important;
+    background-position: center center !important;
+    background-repeat: no-repeat !important;
+    transform-origin: center center !important;
+    animation: sakuraBreathe 3s cubic-bezier(0.42, 0, 0.58, 1) infinite !important;
+}
+
+@keyframes sakuraSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+@keyframes sakuraBreathe {
+    0%, 100% { transform: scale(1); }
+    50%      { transform: scale(0.75); }
+}

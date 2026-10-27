@@ -1,0 +1,240 @@
+/* @name 脉冲 */
+/* @description HUD 网格 + 刻度环 + 分段数据条 + 雷达扫描弧 */
+
+/* ==========================================================================
+   遮罩容器：深色 + HUD 网格
+   ========================================================================== */
+#preloader {
+    background-color: #070a12;
+    background-image:
+        linear-gradient(rgba(34, 211, 238, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 211, 238, 0.045) 1px, transparent 1px);
+    background-size: 28px 28px;
+}
+
+/* 中心柔光 */
+#preloader::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 620px;
+    height: 620px;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle,
+        rgba(34, 211, 238, 0.14) 0%,
+        rgba(34, 211, 238, 0.05) 40%,
+        transparent 70%);
+    pointer-events: none;
+}
+
+/* ==========================================================================
+   内容容器
+   ========================================================================== */
+.preloader-content {
+    gap: 30px;
+}
+
+/* ==========================================================================
+   头像：锐利细环 + 24 格刻度圈
+   ========================================================================== */
+.preloader-avatar {
+    width: 82px;
+    height: 82px;
+    opacity: 0;
+    transform: translateY(8px) scale(0.94);
+    animation: techAvatarIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.10s forwards;
+    box-shadow:
+        0 0 0 1px rgba(34, 211, 238, 0.75),
+        0 0 0 5px rgba(34, 211, 238, 0.10),
+        0 0 28px rgba(34, 211, 238, 0.42);
+}
+
+/* 刻度圈：24 条细密的青蓝刻度 */
+.preloader-avatar::before {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(
+        from -0.75deg,
+        rgba(103, 232, 249, 0.75) 0deg,
+        rgba(103, 232, 249, 0.75) 1.5deg,
+        transparent 1.5deg,
+        transparent 15deg
+    );
+    -webkit-mask: radial-gradient(farthest-side,
+        transparent calc(100% - 3px),
+        #000 calc(100% - 3px));
+            mask: radial-gradient(farthest-side,
+        transparent calc(100% - 3px),
+        #000 calc(100% - 3px));
+    opacity: 0;
+    animation: techFadeIn 1s ease 0.55s forwards;
+    pointer-events: none;
+}
+
+/* 刻度圈外围柔光底环 */
+.preloader-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: radial-gradient(circle farthest-side at center,
+        transparent 88%,
+        rgba(34, 211, 238, 0.10) 92%,
+        transparent 100%);
+    opacity: 0;
+    animation: techFadeIn 1s ease 0.55s forwards;
+    pointer-events: none;
+}
+
+@keyframes techAvatarIn {
+    0%   { opacity: 0; transform: translateY(8px) scale(0.94); }
+    100% { opacity: 1; transform: translateY(0)   scale(1); }
+}
+@keyframes techFadeIn {
+    to { opacity: 1; }
+}
+
+/* ==========================================================================
+   主标题：等宽大写 + 宽字距，像系统日志
+   ========================================================================== */
+.preloader-title {
+    font-family: "SF Mono", ui-monospace, Menlo, Consolas, "PingFang SC", monospace;
+    font-size: 14px;
+    font-weight: 400;
+    color: #67e8f9;
+    line-height: 1.5;
+    opacity: 0;
+    letter-spacing: 0.4em;
+    padding-left: 0.4em;
+    text-transform: uppercase;
+    transform: translateY(3px);
+    animation: techTitleIn 1s cubic-bezier(0.22, 1, 0.36, 1) 0.35s forwards;
+}
+
+@keyframes techTitleIn {
+    0%   { opacity: 0; letter-spacing: 0.7em; padding-left: 0.7em; transform: translateY(3px); }
+    100% { opacity: 1; letter-spacing: 0.4em; padding-left: 0.4em; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   进度条：20 段数据格 + 下方扫描光带
+   ========================================================================== */
+.preloader-progress {
+    width: 240px;
+    height: 4px;
+    border-radius: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        rgba(34, 211, 238, 0.18) 0px,
+        rgba(34, 211, 238, 0.18) 10px,
+        transparent 10px,
+        transparent 12px
+    );
+    opacity: 0;
+    animation: techFadeIn 0.8s ease 0.75s forwards;
+    overflow: visible;
+}
+
+.preloader-progress-bar {
+    height: 100%;
+    width: 0;
+    border-radius: 0;
+    background: repeating-linear-gradient(
+        90deg,
+        #67e8f9 0px,
+        #67e8f9 10px,
+        transparent 10px,
+        transparent 12px
+    );
+    box-shadow: 0 0 10px rgba(103, 232, 249, 0.8);
+    transition: width 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* 进度条下方极细扫描光带 */
+.preloader-progress::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    height: 1px;
+    background: linear-gradient(90deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(103, 232, 249, 0.95) 50%,
+        transparent 60%,
+        transparent 100%);
+    background-size: 200% 100%;
+    animation: techScan 2.2s linear infinite;
+    pointer-events: none;
+}
+
+@keyframes techScan {
+    0%   { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ==========================================================================
+   回访模式：雷达扫描弧（快速旋转）
+   ========================================================================== */
+
+/* 覆盖首次的柔光底环 → 亮弧 + 尾部渐隐 */
+#preloader.is-revisit .preloader-avatar::after {
+    content: '';
+    position: absolute;
+    inset: -14px;
+    border-radius: 50%;
+    background: conic-gradient(
+        from 0deg,
+        rgba(34, 211, 238, 0.00)   0deg,
+        rgba(34, 211, 238, 0.00) 240deg,
+        rgba(34, 211, 238, 0.20) 280deg,
+        rgba(34, 211, 238, 0.70) 330deg,
+        #67e8f9                  355deg,
+        rgba(34, 211, 238, 0.00) 360deg
+    );
+    -webkit-mask: radial-gradient(farthest-side,
+        transparent calc(100% - 2.5px),
+        #000 calc(100% - 2.5px));
+            mask: radial-gradient(farthest-side,
+        transparent calc(100% - 2.5px),
+        #000 calc(100% - 2.5px));
+    filter: drop-shadow(0 0 6px rgba(34, 211, 238, 0.85));
+    animation: techScanSpin 1.4s linear infinite;
+    opacity: 1;
+    transform: none;
+    pointer-events: none;
+    will-change: transform;
+}
+
+@keyframes techScanSpin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+/* 回访时头像外环略收敛 */
+#preloader.is-revisit .preloader-avatar {
+    box-shadow:
+        0 0 0 1px rgba(34, 211, 238, 0.7),
+        0 0 0 5px rgba(34, 211, 238, 0.08),
+        0 0 28px rgba(34, 211, 238, 0.36);
+}
+
+/* 回访时隐藏进度条，只留扫描弧 */
+html.revisit #preloader .preloader-progress {
+    display: none;
+}
+
+/* ==========================================================================
+   手机端微调
+   ========================================================================== */
+@media (max-width: 600px) {
+    .preloader-title { font-size: 12px; max-width: 86vw; }
+    .preloader-progress { width: 190px; }
+    .preloader-avatar { width: 72px; height: 72px; }
+    .preloader-content { gap: 26px; }
+}
