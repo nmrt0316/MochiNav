@@ -125,6 +125,26 @@ html[data-theme="dark"] .update-header .btn-back:hover { background: rgba(255, 2
 .update-tool-row .btn { flex: 1; min-width: 130px; }
 .update-rollback-btn { background: rgba(245, 108, 108, 0.12); color: #dc2626; border: 1px solid rgba(245, 108, 108, 0.40); }
 html[data-theme="dark"] .update-rollback-btn { background: rgba(245, 108, 108, 0.18); color: #f87171; border-color: rgba(245, 108, 108, 0.5); }
+
+@media (max-width: 480px) {
+    .update-version-row {
+        flex-direction: column;
+        gap: 8px;
+        padding: 12px 0;
+    }
+    .update-version-arrow {
+        transform: rotate(90deg);
+        margin: 4px 0;
+        opacity: 0.6;
+    }
+    .update-version-item {
+        width: 100%;
+    }
+    .update-version-value {
+        font-size: 18px;
+        word-break: break-all;
+    }
+}
 </style>
 </head>
 <body class="update-page">
@@ -211,9 +231,8 @@ html[data-theme="dark"] .update-rollback-btn { background: rgba(245, 108, 108, 0
     <!-- 风险提示 -->
     <div class="update-warning">
         ⚠️ 在线升级会覆盖代码文件（<code>*.php</code> / <code>*.css</code> / <code>*.js</code> / <code>README.md</code> / <code>CHANGELOG.md</code>），
-        但<b>不会动</b> <code>admin/data.json</code>、<code>admin/.admin.conf</code>、<code>admin/.update/</code>、
-        <code>photos/</code> 下的普通图片（<code>photos/kanban/</code> 内的形象文件仅覆盖同名文件，不会删除你添加的其它形象）、
-        <code>assets/js/</code> 与 <code>assets/preloaders/</code> 下你自建的同名以外文件（同名文件会被覆盖）。
+        但<b>绝对不会动</b> <code>admin/data.json</code>、<code>admin/.admin.conf</code>、<code>admin/.update/</code>、<code>photos/</code> 目录下的任何文件（包含看板娘）。
+        对于 <code>assets/js/</code> 与 <code>assets/preloaders/</code>，仅会覆盖与官方同名的文件，你自建的其它文件不受影响。
         升级失败会自动回滚，也可以手动回滚到上一版本。
     </div>
 

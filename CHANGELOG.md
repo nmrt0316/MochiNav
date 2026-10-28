@@ -1,3 +1,4 @@
+<!-- 文件路径: CHANGELOG.md -->
 # Changelog
 
 格式参考 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)，
@@ -44,26 +45,28 @@
 - **`admin/defaults.php` 新增 `admin_bg_presets()` 函数**：返回 5 套配色预设的权威数据，前后台共用。
 
 ### 变更
+- **前台搜索框交互重构**：废弃原生 `<select>` 下拉框，采用自定义 DOM 结构重写搜索引擎选择器，实现带毛玻璃质感和展开动画的下拉菜单，完美融入深色模式。
+- **搜索框布局重构**：废弃容易引发卡顿与闪烁的 `grid-template-columns` 过渡，改为稳定的 Flex 布局控制伸缩，动画更丝滑。
+- **在线升级页响应式优化**：针对 ≤480px 屏幕增加媒体查询，当前版本与最新版本自动由左右排列改为上下垂直排列，箭头旋转 90 度，解决长版本号导致的排版错位。
+- **风险提示文案优化**：升级页提示文案明确区分 `photos/` 目录与 `assets/` 目录的覆盖规则，避免用户误解。
 - **`admin/update.php` 重构**：删除内联的 API 请求代码，`doCheckUpdate` 改为调用 `window.NuomiUpdater.check()`，与后台首页共用同一套请求逻辑；「重新检查更新」按钮由 emoji 改为 SVG 图标。
-- **平滑动效重构**：版本号胶囊的宽度变化、底色渐变、文字切换（交叉淡入淡出）全部交由 CSS `transition` 处理。
 - **移动端 UI 调整**：移除手机端主题切换按钮的 `32px` 缩小限制，全平台统一保持 `38px`。
 - **首页公告条层级提升**：`z-index` 从 `12` 提升到 **`10000`**，永远盖住天气等第三方悬浮组件（天气 `z-index: 9999`）。公告条关闭后，天气自动露出。
 - **`#app` 的 `z-index` 由 `11` 改为 `auto`**：解除 `#app` 的 stacking context 约束，使公告条可以跳出 `#app` 内部层级，直接与外部悬浮组件竞争。
 - **首页公告条关闭动画重构**：从「瞬间 `removeChild` 抽走空间」改为「**外层 `max-height` + `margin-bottom` 平滑收缩（400ms）+ 内层同步滑走淡出**」，下方内容是跟着缓动平滑上移，不再突兀跳动。
-  - 外层 `overflow: hidden; transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.4s, opacity 0.32s`。
-  - 内层 `transform: translateY(-12px)` 同步滑走。
-  - JS `removeChild` 延后到 420ms，此时公告条高度已为 0，删除不会有视觉变化。
 - **`admin/defaults.php` 新增字段**：`searchEnabled` / `searchDefaultEngine` / `searchEngines` / `adminBgPreset`。
 - **`admin/index.php` 新增逻辑**：`normalize_search_engines()` 归一化搜索引擎列表（去重、校验 key 格式、剔除非法 URL、保证 local 引擎存在）；搜索配置与 `adminBgPreset` 的保存逻辑；搜索配置和配色预设的 HTML 渲染。
 - **`index.php` 新增逻辑**：搜索配置解析（`$searchEnabled` / `$searchEngines` / `$searchDefaultEngine`），`NUOMI_CONFIG` 注入 `search` 配置块，搜索框骨架 HTML 输出（仅在 `searchEnabled === '1'` 时）。
-- **`admin/data.json` 搜索配置结构**：`site.searchEngines` 为 `[{key, name, url}, ...]` 数组，`site.searchDefaultEngine` 为默认引擎的 `key`。
+- **升级策略收紧**：修改 `admin/updater.php` 白名单规则，`photos/` 目录（包含 `kanban/` 看板娘）改为绝对保护，不再覆盖任何同名文件，防止升级包意外覆盖用户形象。
 
 ### 修复
+- **前台搜索框首屏动画缺失**：修复了搜索框加入 DOM 后未跟随首屏元素一起上浮渐显的问题，现在会按节奏优雅入场。
+- **搜索框展开闪烁卡顿**：修复了因布局过渡引发的高频重绘，消除点击展开时的闪烁和卡顿感。
+- **搜索确认按钮视觉缺陷**：将原本类似“回车/撤销”的线条图标替换为现代感更强的圆形放大镜图标，并增加淡色背景底色。
+- **深色模式公告条边角缺陷**：修复了公告条左侧 3px 高亮边框在圆角处因渲染合并导致的黑色遮罩瑕疵，改用 `inset box-shadow` 方案完美贴合内壁。
 - **版本号胶囊缓存逻辑**：修复升级到新版本后，重新进后台版本胶囊仍然**永久橙色且不再重新检查**的问题。
   - **根因**：`sessionStorage.nuomi_has_update` 只存孤立布尔值 `'1'`，缓存没有版本上下文，无法判断「这条结论是否还成立」。
   - **修复**：缓存结构改为 `{ version, hasUpdate, latest }`。版本号变更时缓存自动作废，重新走完整检查；版本号一致时复用缓存结论（保留防闪烁优化）。
-  - **顺带修复**：「已是最新」分支之前没有清掉旧缓存，导致服务端撤回 release 后可能误判。新逻辑每次检查完都会写入完整对象。
-  - **详细机制**见 README「版本胶囊自检（防闪烁缓存机制）」章节。
 - **公告条关闭时下方内容突兀跳动**：`removeChild` 时机与动画脱节导致空间瞬间抽走。改为高度 + margin 同步收缩，动画结束后再 `removeChild`。
 - **`#app` 层级隔离导致公告条无法盖住天气**：`#app` 的 `z-index: 11` 建立了独立 stacking context，内部元素无论 z-index 多大都无法突破 `#app` 的层。改为 `auto` 后，公告条的 `z-index: 10000` 才能真正生效。
 - **`site_defaults()` 中 `searchEngines` 数组字段在前台合并时被 `trim((string)$v)` 触发 warning**：改为「数组字段跳过 trim 兜底，单独判断处理」。
@@ -93,8 +96,8 @@
 - **前台 Powered by / GitHub 链接硬编码**：不再读取 `site.poweredBy` / `site.githubUrl` / `site.githubEnabled`。
 - **升级覆盖白名单重构**：
   - `README.md`、`CHANGELOG.md` 移出保护名单，允许升级覆盖。
-  - `assets/js/`、`assets/preloaders/`、`photos/kanban/` 下允许覆盖同名文件（用户新增的不同名文件不受影响）。
-  - 绝对保护：`admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/` 下普通图片。
+  - `assets/js/`、`assets/preloaders/` 下允许覆盖同名文件（用户新增的不同名文件不受影响）。
+  - 绝对保护：`admin/data.json`、`admin/.admin.conf`、`admin/.update/`、`photos/` 下所有文件。
 
 ### 修复
 - **在线升级状态锁死**：修复"失败"或"已回滚"状态下升级按钮被锁死、必须手动删 `state.json` 才能重试的问题。现在只要检测到新版本且环境允许，永远优先展示「⬆ 立即升级」按钮；「重新检查」和「回滚」作为次级按钮放在下方工具区。
@@ -103,7 +106,7 @@
 - **前台公告条宽度**：`.home-announcement` 去掉固定 `max-width` 与左右 padding，自适应 `#app` 内部宽度。
 
 ### 安全
-- **升级白名单收敛**：`photos/` 下普通图片、`admin/data.json`、`admin/.admin.conf`、`admin/.update/` 绝对保护。
+- **升级白名单收敛**：`photos/` 下所有文件、`admin/data.json`、`admin/.admin.conf`、`admin/.update/` 绝对保护。
 - **下载地址白名单**：只认 `github.com` / `raw.githubusercontent.com` / `objects.githubusercontent.com` / `codeload.github.com`。
 - **Token 按需传递**：`update_fetch_release` 仅在 `site.githubToken` 非空时附加 `Authorization: Bearer` 头，不写入 cache 文件。
 

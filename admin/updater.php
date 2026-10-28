@@ -330,7 +330,7 @@ function update_validate_relative_path($path) {
    - admin/data.json       用户数据
    - admin/.admin.conf     管理员账号
    - admin/.update/        升级工作目录
-   - photos/ 下除 kanban/ 外的所有文件（用户上传的图片）
+   - photos/             （用户上传的图片）
    - LICENSE              协议文件 */
 function update_is_preserved($relPath) {
     $rel = ltrim(str_replace('\\', '/', (string)$relPath), '/');
@@ -342,7 +342,6 @@ function update_is_preserved($relPath) {
     }
 
     if ($rel === 'photos' || strpos($rel, 'photos/') === 0) {
-        if (strpos($rel, 'photos/kanban/') === 0) return false;
         return true;
     }
 
@@ -356,7 +355,6 @@ function update_is_preserved($relPath) {
    - admin/ 下 php/css/js/md/txt/html/htm
    - assets/js/ 下 .js，assets/preloaders/ 下 .css
    - assets/ 下其它静态资源按扩展名放行
-   - photos/kanban/ 下图片
    用户自己添加的其它文件（同目录不同名）不会被删除，只会覆盖同名文件。 */
 function update_is_allowed_overwrite($relPath) {
     $rel = ltrim(str_replace('\\', '/', (string)$relPath), '/');
@@ -383,11 +381,6 @@ function update_is_allowed_overwrite($relPath) {
     if (strpos($rel, 'assets/') === 0) {
         $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
         return in_array($ext, ['php', 'css', 'js', 'html', 'htm', 'json', 'txt'], true);
-    }
-
-    if (strpos($rel, 'photos/kanban/') === 0) {
-        $ext = strtolower(pathinfo($rel, PATHINFO_EXTENSION));
-        return in_array($ext, ['gif', 'png', 'webp', 'jpg', 'jpeg'], true);
     }
 
     return false;

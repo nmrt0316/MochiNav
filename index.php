@@ -149,6 +149,14 @@ if (!in_array($searchDefaultEngine, array_column($searchEngines, 'key'), true)) 
     $searchDefaultEngine = $searchEngines[0]['key'];
 }
 
+$defaultEngName = '本地卡片';
+foreach ($searchEngines as $eng) {
+    if ($eng['key'] === $searchDefaultEngine) {
+        $defaultEngName = $eng['name'];
+        break;
+    }
+}
+
 /* ==========================================================================
    3.1 最新一条启用的公告（用于首页公告条）
    ========================================================================== */
@@ -427,16 +435,24 @@ $__preloaderList = array_map(function ($p) {
                 <span class="search-trigger-text">搜索</span>
             </button>
             <div class="search-panel" id="searchPanel">
-                <select class="search-engine" id="searchEngine" aria-label="搜索引擎">
-                    <?php foreach ($searchEngines as $eng): ?>
-                    <option value="<?= htmlspecialchars($eng['key']) ?>"<?= $eng['key'] === $searchDefaultEngine ? ' selected' : '' ?>><?= htmlspecialchars($eng['name']) ?></option>
-                    <?php endforeach; ?>
-                </select>
+                <div class="search-engine-select" id="searchEngineSelect">
+                    <button type="button" class="search-engine-btn" id="searchEngineBtn" aria-haspopup="listbox" aria-label="选择搜索引擎">
+                        <span class="search-engine-text" id="searchEngineText"><?= htmlspecialchars($defaultEngName) ?></span>
+                        <svg class="search-engine-arrow" viewBox="0 0 10 6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M1 1l4 4 4-4"/>
+                        </svg>
+                    </button>
+                    <div class="search-engine-options" id="searchEngineOptions" role="listbox">
+                        <?php foreach ($searchEngines as $eng): ?>
+                            <div class="search-engine-option<?= $eng['key'] === $searchDefaultEngine ? ' is-selected' : '' ?>" data-value="<?= htmlspecialchars($eng['key']) ?>" role="option"><?= htmlspecialchars($eng['name']) ?></div>
+                        <?php endforeach; ?>
+                    </div>
+                </div>
                 <input type="text" class="search-input" id="searchInput" placeholder="搜索卡片或输入关键词…" autocomplete="off" spellcheck="false">
                 <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 10 4 15 9 20"></polyline>
-                        <path d="M20 4v7a4 4 0 0 1-4 4H4"></path>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </button>
             </div>

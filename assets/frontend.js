@@ -2032,14 +2032,27 @@
             var bar = document.getElementById('searchBar');
             var trigger = document.getElementById('searchTrigger');
             var panel = document.getElementById('searchPanel');
-            var engineSelect = document.getElementById('searchEngine');
+            
+            var engineBtn = document.getElementById('searchEngineBtn');
+            var engineText = document.getElementById('searchEngineText');
+            var engineOptions = document.getElementById('searchEngineOptions');
+            var engineSelectWrap = document.getElementById('searchEngineSelect');
+            
             var input = document.getElementById('searchInput');
             var submitBtn = document.getElementById('searchSubmit');
             var dropdown = document.getElementById('searchDropdown');
             var dropdownList = document.getElementById('searchDropdownList');
-            if (!wrap || !bar || !trigger || !panel || !engineSelect || !input || !dropdown || !dropdownList) return;
+            if (!wrap || !bar || !trigger || !panel || !engineBtn || !input || !dropdown || !dropdownList) return;
 
             var ENGINES = Array.isArray(SEARCH_CFG.engines) ? SEARCH_CFG.engines : [];
+            var currentEngineKey = 'local';
+            var defaultOpt = engineOptions.querySelector('.search-engine-option.is-selected');
+            if (defaultOpt) {
+                currentEngineKey = defaultOpt.dataset.value;
+            } else if (engineOptions.firstElementChild) {
+                currentEngineKey = engineOptions.firstElementChild.dataset.value;
+            }
+            
             var expanded = false;
             var activeIndex = -1;
             var currentResults = [];
@@ -2062,7 +2075,7 @@
                     escapeHtml(raw.slice(idx + kw.length));
             }
 
-            function isLocalMode() { return engineSelect.value === 'local'; }
+            function isLocalMode() { return currentEngineKey === 'local'; }
 
             function buildCardIndex() {
                 var cards = [];
@@ -2152,7 +2165,7 @@
                 if (!keyword) return;
                 var engine = null;
                 for (var i = 0; i < ENGINES.length; i++) {
-                    if (ENGINES[i].key === engineSelect.value) { engine = ENGINES[i]; break; }
+                    if (ENGINES[i].key === currentEngineKey) { engine = ENGINES[i]; break; }
                 }
                 if (!engine || !engine.url) return;
                 var target;
@@ -2180,6 +2193,7 @@
                 wrap.classList.remove('is-expanded');
                 bar.classList.remove('is-expanded');
                 closeDropdown();
+                engineSelectWrap.classList.remove('is-open');
                 input.value = '';
                 currentResults = [];
             }
@@ -2204,13 +2218,37 @@
                 if (kw && isLocalMode()) renderResults(kw);
             });
 
-            engineSelect.addEventListener('change', function () {
+            engineBtn.addEventListener('click', function (e) {
+                e.stopPropagation();
+                var isOpen = engineSelectWrap.classList.contains('is-open');
+                closeDropdown();
+                if (isOpen) {
+                    engineSelectWrap.classList.remove('is-open');
+                } else {
+                    engineSelectWrap.classList.add('is-open');
+                }
+            });
+
+            engineOptions.addEventListener('click', function (e) {
+                var opt = e.target.closest('.search-engine-option');
+                if (!opt) return;
+                e.stopPropagation();
+                
+                currentEngineKey = opt.dataset.value;
+                engineText.textContent = opt.textContent;
+                
+                engineOptions.querySelectorAll('.search-engine-option').forEach(function(el) {
+                    el.classList.toggle('is-selected', el === opt);
+                });
+                
+                engineSelectWrap.classList.remove('is-open');
+                
                 if (isLocalMode()) {
                     renderResults(input.value.trim());
                 } else {
                     closeDropdown();
                 }
-                if (expanded) input.focus();
+                input.focus();
             });
 
             submitBtn.addEventListener('click', function (e) {
@@ -2282,6 +2320,11 @@
             });
 
             document.addEventListener('click', function (e) {
+                if (engineSelectWrap.classList.contains('is-open')) {
+                    if (!engineSelectWrap.contains(e.target)) {
+                        engineSelectWrap.classList.remove('is-open');
+                    }
+                }
                 if (!expanded) return;
                 if (wrap.contains(e.target)) return;
                 collapseSearch();
