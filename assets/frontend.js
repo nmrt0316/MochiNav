@@ -2225,6 +2225,10 @@
                 if (isOpen) {
                     wrap.classList.remove('engine-open');
                 } else {
+                    var barRect = bar.getBoundingClientRect();
+                    var wrapRect = wrap.getBoundingClientRect();
+                    engineOptions.style.left = (barRect.left - wrapRect.left) + 'px';
+                    engineOptions.style.top = (barRect.bottom - wrapRect.top + 8) + 'px';
                     wrap.classList.add('engine-open');
                 }
             });
