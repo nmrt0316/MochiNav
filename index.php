@@ -442,11 +442,6 @@ $__preloaderList = array_map(function ($p) {
                             <path d="M1 1l4 4 4-4"/>
                         </svg>
                     </button>
-                    <div class="search-engine-options" id="searchEngineOptions" role="listbox">
-                        <?php foreach ($searchEngines as $eng): ?>
-                            <div class="search-engine-option<?= $eng['key'] === $searchDefaultEngine ? ' is-selected' : '' ?>" data-value="<?= htmlspecialchars($eng['key']) ?>" role="option"><?= htmlspecialchars($eng['name']) ?></div>
-                        <?php endforeach; ?>
-                    </div>
                 </div>
                 <input type="text" class="search-input" id="searchInput" placeholder="搜索卡片或输入关键词…" autocomplete="off" spellcheck="false">
                 <button type="button" class="search-submit" id="searchSubmit" aria-label="搜索">
@@ -457,6 +452,15 @@ $__preloaderList = array_map(function ($p) {
                 </button>
             </div>
         </div>
+
+        <!-- 搜索引擎列表，脱离 search-bar 限制，绝对定位浮层 -->
+        <div class="search-engine-options" id="searchEngineOptions" role="listbox">
+            <?php foreach ($searchEngines as $eng): ?>
+                <div class="search-engine-option<?= $eng['key'] === $searchDefaultEngine ? ' is-selected' : '' ?>" data-value="<?= htmlspecialchars($eng['key']) ?>" role="option"><?= htmlspecialchars($eng['name']) ?></div>
+            <?php endforeach; ?>
+        </div>
+
+        <!-- 卡片搜索结果浮层 -->
         <div class="search-dropdown" id="searchDropdown">
             <div class="search-dropdown-list" id="searchDropdownList"></div>
         </div>

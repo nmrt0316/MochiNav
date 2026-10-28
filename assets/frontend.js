@@ -2191,9 +2191,9 @@
                 if (!expanded) return;
                 expanded = false;
                 wrap.classList.remove('is-expanded');
+                wrap.classList.remove('engine-open');
                 bar.classList.remove('is-expanded');
                 closeDropdown();
-                engineSelectWrap.classList.remove('is-open');
                 input.value = '';
                 currentResults = [];
             }
@@ -2220,12 +2220,12 @@
 
             engineBtn.addEventListener('click', function (e) {
                 e.stopPropagation();
-                var isOpen = engineSelectWrap.classList.contains('is-open');
+                var isOpen = wrap.classList.contains('engine-open');
                 closeDropdown();
                 if (isOpen) {
-                    engineSelectWrap.classList.remove('is-open');
+                    wrap.classList.remove('engine-open');
                 } else {
-                    engineSelectWrap.classList.add('is-open');
+                    wrap.classList.add('engine-open');
                 }
             });
 
@@ -2241,7 +2241,7 @@
                     el.classList.toggle('is-selected', el === opt);
                 });
                 
-                engineSelectWrap.classList.remove('is-open');
+                wrap.classList.remove('engine-open');
                 
                 if (isLocalMode()) {
                     renderResults(input.value.trim());
@@ -2320,9 +2320,9 @@
             });
 
             document.addEventListener('click', function (e) {
-                if (engineSelectWrap.classList.contains('is-open')) {
-                    if (!engineSelectWrap.contains(e.target)) {
-                        engineSelectWrap.classList.remove('is-open');
+                if (wrap.classList.contains('engine-open')) {
+                    if (!e.target.closest('#searchEngineSelect') && !e.target.closest('#searchEngineOptions')) {
+                        wrap.classList.remove('engine-open');
                     }
                 }
                 if (!expanded) return;

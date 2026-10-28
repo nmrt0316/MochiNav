@@ -4,7 +4,7 @@
    ========================================================================== */
 
 if (!defined('NUOMI_VERSION')) {
-    define('NUOMI_VERSION', '1.1.3-beta.2');
+    define('NUOMI_VERSION', '1.1.3');
 }
 
 if (!defined('UPDATE_GITHUB_REPO')) {

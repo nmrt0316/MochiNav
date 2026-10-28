@@ -826,23 +826,29 @@ html[data-theme="dark"] .footer-row-powered .footer-link:hover {
     background: rgba(255, 255, 255, 0.72);
     backdrop-filter: blur(16px) saturate(180%);
     -webkit-backdrop-filter: blur(16px) saturate(180%);
-    border: 1px solid rgba(102, 126, 234, 0.25);
+    border: none;
     border-radius: 12px;
-    box-shadow: inset 3px 0 0 #667eea, 0 4px 16px rgba(102, 126, 234, 0.10);
+    box-shadow: 
+        inset 3px 0 0 #667eea, 
+        inset 0 0 0 1px rgba(102, 126, 234, 0.25), 
+        0 4px 16px rgba(102, 126, 234, 0.10);
     font-size: 13px;
     color: #2c3e50;
-    transition: background-color 0.4s ease, border-color 0.4s ease, color 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
-    transform: translateY(0);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease, color 0.4s ease, transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateY(0) translateZ(0);
+    will-change: transform;
 }
 .home-announcement.is-closing .home-announcement-inner {
-    transform: translateY(-12px);
+    transform: translateY(-12px) translateZ(0);
 }
 
 html[data-theme="dark"] .home-announcement-inner {
     background: rgba(34, 40, 56, 0.65);
-    border-color: rgba(120, 150, 230, 0.25);
     color: #e8eaf6;
-    box-shadow: inset 3px 0 0 #7c8ef5, inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 4px 16px rgba(0, 0, 0, 0.2);
+    box-shadow: 
+        inset 3px 0 0 #7c8ef5, 
+        inset 0 0 0 1px rgba(120, 150, 230, 0.25), 
+        0 4px 16px rgba(0, 0, 0, 0.2);
 }
 
 .home-announcement-icon {
@@ -973,8 +979,8 @@ html[data-theme="dark"] .home-announcement-close:hover {
     justify-content: center;
     gap: 6px;
     height: 100%;
-    width: 100%;
-    padding: 0 14px;
+    width: 108px;
+    padding: 0;
     border: none;
     background: transparent;
     color: rgba(30, 41, 59, 0.72);
@@ -985,12 +991,10 @@ html[data-theme="dark"] .home-announcement-close:hover {
     flex-shrink: 0;
     transition:
         width 0.48s cubic-bezier(0.34, 1.56, 0.64, 1),
-        padding 0.42s cubic-bezier(0.34, 1.56, 0.64, 1),
         color 0.28s ease;
 }
 .search-wrap.is-expanded .search-trigger {
     width: 38px;
-    padding: 0;
     cursor: text;
 }
 
@@ -1060,44 +1064,50 @@ html[data-theme="dark"] .home-announcement-close:hover {
     flex-shrink: 0;
     transition: transform 0.3s ease;
 }
-.search-engine-select.is-open .search-engine-arrow {
+.search-wrap.engine-open .search-engine-arrow {
     transform: rotate(180deg);
 }
 
+/* 搜索列表浮层（独立于 search-bar，参考加载动画框） */
 .search-engine-options {
     position: absolute;
-    top: calc(100% + 8px);
-    left: 0;
-    min-width: 100px;
-    background: rgba(255, 255, 255, 0.96);
-    backdrop-filter: blur(20px) saturate(180%);
-    -webkit-backdrop-filter: blur(20px) saturate(180%);
-    border-radius: 12px;
+    top: 52px;
+    left: 16px;
+    min-width: 120px;
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border-radius: 14px;
     border: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-    padding: 6px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+    padding: 8px;
     display: flex;
     flex-direction: column;
     gap: 2px;
     opacity: 0;
     visibility: hidden;
-    transform: translateY(-6px) scale(0.98);
-    transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1), visibility 0.22s;
-    z-index: 10;
+    transform: translateY(-6px) scale(0.92);
+    transform-origin: top left;
+    transition: 
+        opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+        visibility 0.25s;
+    z-index: 200;
 }
-.search-engine-select.is-open .search-engine-options {
+.search-wrap.engine-open .search-engine-options {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
 }
 .search-engine-option {
-    padding: 8px 12px;
-    border-radius: 8px;
+    padding: 9px 12px;
+    border-radius: 10px;
     font-size: 13px;
     color: #2c3e50;
     cursor: pointer;
     white-space: nowrap;
     transition: background-color 0.18s ease, color 0.18s ease;
+    -webkit-tap-highlight-color: transparent;
 }
 .search-engine-option:hover {
     background: rgba(102, 126, 234, 0.1);
@@ -1328,9 +1338,9 @@ html[data-theme="dark"] .search-engine-btn { color: rgba(232, 234, 246, 0.85); }
     html[data-theme="dark"] .search-engine-btn:hover { color: #a5b4fc; }
 }
 html[data-theme="dark"] .search-engine-options {
-    background: rgba(30, 33, 48, 0.96);
+    background: rgba(30, 33, 48, 0.94);
     border-color: rgba(255, 255, 255, 0.08);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 html[data-theme="dark"] .search-engine-option { color: #e8eaf6; }
 html[data-theme="dark"] .search-engine-option:hover {
@@ -1411,15 +1421,18 @@ html[data-theme="dark"] .search-empty { color: rgba(232, 234, 246, 0.5); }
 		max-width: 100%;
 	}
 	.search-trigger {
-		padding: 0 12px;
+		width: 100px;
 		font-size: 12.5px;
 	}
 	.search-wrap.is-expanded .search-trigger {
-		padding: 0 6px 0 12px;
 		width: 34px;
 	}
 	.search-trigger-icon { width: 15px; height: 15px; }
 	.search-engine-btn { padding: 0 6px; font-size: 12px; }
+	.search-engine-options {
+		top: 46px;
+		left: 14px;
+	}
 	.search-input { font-size: 12.5px; }
 	.search-submit { width: 28px; height: 28px; }
 	.search-submit svg { width: 13px; height: 13px; }
